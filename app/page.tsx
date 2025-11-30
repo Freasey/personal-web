@@ -5,8 +5,9 @@ import Image from 'next/image';
 export default function Home() {
   return (
     <div>
-      <div className="fixed top-0 left-0 w-screen h-screen flex justify-center items-center">
-        <div className='bg-[#e8e8e8]/10 w-[1200px] h-[600px] rounded-[20px] flex p-10 justify-between'>
+      <div className="fixed top-0 left-0 w-screen h-screen flex justify-center items-center flex-col">
+        <div><span className='text-2xl'>Hello, Whats bring you here?</span></div>
+        <div className='bg-[#e8e8e8]/10 w-[1200px] h-[500px] rounded-[20px] flex p-8 justify-between'>
           <div className='w-[550px] h-full rounded-[20px] flex overflow-hidden relative outline-8 outline-[#f8f8f8]/8'>
             <Image 
               src="https://wallpapers.com/images/hd/yoru-valorant-rau8iuqeaoatkrbw.jpg" 
