@@ -1,0 +1,5 @@
+export { BioView } from './BioView'
+export { CardsView } from './CardsView'
+export { ContactView } from './ContactView'
+export { ProjectsView } from './ProjectsView'
+export { SkillsView } from './SkillsView'
