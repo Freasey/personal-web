@@ -33,20 +33,20 @@ export const SmallCard = ({ card, index, isHovered, onMouseEnter, onMouseLeave, 
       )}
       <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-95 transition-opacity duration-300" />
 
-      <div className="absolute bottom-0 left-0 right-0 p-5">
+      <div className="absolute bottom-0 left-0 right-0 p-3 lg:p-5">
         <div className="transition-all duration-500 translate-y-0 opacity-100">
-          <p className={`${index === 0 ? 'text-cyan-400' : 'text-teal-400'} text-[10px] lg:text-xs font-semibold tracking-wider mb-1`}>
+          <p className={`${index === 0 ? 'text-cyan-400' : 'text-teal-400'} text-[9px] lg:text-xs font-semibold tracking-wider mb-1`}>
             {card.subtitle}
           </p>
         </div>
-        <h3 className="text-xl lg:text-2xl font-bold text-white mb-1 lg:mb-2">
+        <h3 className="text-base lg:text-2xl font-bold text-white mb-1 lg:mb-2">
           {card.title}
         </h3>
-        <p className="text-gray-300 text-xs lg:text-sm transition-all duration-500 translate-y-0 opacity-100">
+        <p className="text-gray-300 text-[10px] lg:text-sm line-clamp-2 lg:line-clamp-none transition-all duration-500 translate-y-0 opacity-100">
           {card.description}
         </p>
         {card.cta && (
-          <p className="text-gray-200 text-[10px] lg:text-xs mt-1 lg:mt-2 transition-all duration-500 translate-y-0 opacity-100">
+          <p className="text-gray-200 text-[9px] lg:text-xs mt-1 lg:mt-2 transition-all duration-500 translate-y-0 opacity-100">
             {card.cta}
           </p>
         )}

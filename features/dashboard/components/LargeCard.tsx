@@ -27,16 +27,16 @@ export const LargeCard = ({ card, isHovered, onMouseEnter, onMouseLeave, onClick
 
       <div className="absolute bottom-0 left-0 right-0 p-8">
         <div className="transition-all duration-500 translate-y-0 opacity-100">
-          <p className="text-purple-400 text-xs lg:text-sm font-semibold tracking-wider mb-1 lg:mb-2">
+          <p className="text-purple-400 text-[10px] lg:text-sm font-semibold tracking-wider mb-1 lg:mb-2">
             {card.subtitle}
           </p>
         </div>
-        <h2 className="text-3xl lg:text-5xl font-bold text-white mb-2 lg:mb-3">{card.title}</h2>
-        <p className="text-gray-300 text-sm lg:text-lg transition-all duration-500 translate-y-0 opacity-100">
+        <h2 className="text-2xl lg:text-5xl font-bold text-white mb-2 lg:mb-3">{card.title}</h2>
+        <p className="text-gray-300 text-xs lg:text-lg transition-all duration-500 translate-y-0 opacity-100">
           {card.description}
         </p>
         {card.cta && (
-          <p className="text-purple-200 text-xs lg:text-sm mt-2 lg:mt-3 transition-all duration-500 translate-y-0 opacity-100">
+          <p className="text-purple-200 text-[10px] lg:text-sm mt-2 lg:mt-3 transition-all duration-500 translate-y-0 opacity-100">
             {card.cta}
           </p>
         )}

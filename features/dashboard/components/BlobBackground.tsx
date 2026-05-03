@@ -13,7 +13,7 @@ export const BlobBackground = () => {
         {blobs.map((blob, i) => (
           <div
             key={i}
-            className={`absolute ${blob.position} w-[480px] h-[480px] bg-linear-to-r ${blob.color} rounded-full mix-blend-screen filter blur-3xl opacity-60 animate-blob`}
+            className={`absolute ${blob.position} w-[250px] h-[250px] lg:w-[480px] lg:h-[480px] bg-linear-to-r ${blob.color} rounded-full mix-blend-screen filter blur-3xl opacity-60 animate-blob`}
             style={{ animationDelay: blob.delay }}
           />
         ))}

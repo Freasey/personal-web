@@ -35,7 +35,7 @@ export const ProjectsView = ({
         </button>
       </div>
 
-      <div className={`flex flex-col lg:flex-row gap-4 overflow-y-auto lg:overflow-x-auto pb-2 ${showDetailMobile ? 'hidden lg:flex' : 'flex'} max-h-[600px] lg:max-h-none`}>
+      <div className={`flex flex-col lg:flex-row gap-4 lg:overflow-x-auto pb-2 ${showDetailMobile ? 'hidden lg:flex' : 'flex'}`}>
         {projects.map((project) => (
           <article
             key={project.id}
@@ -86,7 +86,7 @@ export const ProjectsView = ({
 
         <div className="mt-5">
           <p className="text-xs uppercase tracking-[0.2em] text-white/60">Gallery</p>
-          <div className="mt-3 flex flex-col lg:flex-row gap-4 overflow-y-auto lg:overflow-x-auto pb-2 max-h-[300px] lg:max-h-none">
+          <div className="mt-3 flex flex-col lg:flex-row gap-4 lg:overflow-x-auto pb-2">
             {selectedProject?.gallery.map((item) => (
               <figure
                 key={item.id}

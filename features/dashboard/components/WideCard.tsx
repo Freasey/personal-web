@@ -32,20 +32,20 @@ export const WideCard = ({ card, isHovered, onMouseEnter, onMouseLeave, onClick 
       )}
       <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-95 transition-opacity duration-300" />
 
-      <div className="absolute bottom-0 left-0 right-0 p-6">
+      <div className="absolute bottom-0 left-0 right-0 p-4 lg:p-6">
         <div className="transition-all duration-500 translate-y-0 opacity-100">
-          <p className="text-orange-400 text-sm font-semibold tracking-wider mb-2">
+          <p className="text-orange-400 text-[10px] lg:text-sm font-semibold tracking-wider mb-1 lg:mb-2">
             {card.subtitle}
           </p>
         </div>
-        <h3 className="text-3xl font-bold text-white mb-2">
+        <h3 className="text-xl lg:text-3xl font-bold text-white mb-1 lg:mb-2">
           {card.title}
         </h3>
-        <p className="text-gray-300 transition-all duration-500 translate-y-0 opacity-100">
+        <p className="text-gray-300 text-xs lg:text-base transition-all duration-500 translate-y-0 opacity-100">
           {card.description}
         </p>
         {card.cta && (
-          <p className="text-gray-200 text-sm mt-2 transition-all duration-500 translate-y-0 opacity-100">
+          <p className="text-gray-200 text-[10px] lg:text-sm mt-1 lg:mt-2 transition-all duration-500 translate-y-0 opacity-100">
             {card.cta}
           </p>
         )}

@@ -25,10 +25,10 @@ export const getCards = (blobUrl: Record<string, string> | null): CardItem[] => 
   },
   {
     id: 3,
-    title: "Skills & Experience",
-    subtitle: "What I Do",
-    description: "TypeScript, Next.js, UI engineering, APIs, and performance tuning.",
-    cta: "View capabilities",
+    title: "Achivements",
+    subtitle: "Verified Expertise",
+    description: "A collection of awards and certifications",
+    cta: "View achievements",
     href: "#skills",
     bgClass: "from-emerald-900 via-teal-900 to-cyan-800",
     backgroundSvg: "/assets/cards/bg-skills.svg"
