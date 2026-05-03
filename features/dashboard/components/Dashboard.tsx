@@ -53,10 +53,10 @@ export const Dashboard = () => {
 
   const containerClass =
     view === 'projects'
-      ? 'backdrop-blur-2xl bg-black/20 w-[1200px] rounded-3xl flex p-6 gap-6 border border-white/10 shadow-2xl text-white'
+      ? 'backdrop-blur-2xl bg-black/20 w-[95%] lg:w-[1200px] rounded-3xl flex flex-col lg:flex-row p-4 lg:p-6 gap-6 border border-white/10 shadow-2xl text-white'
       : view === 'contact'
-      ? 'backdrop-blur-2xl bg-black/20 w-[1200px] h-auto rounded-3xl flex p-6 gap-6 border border-white/10 shadow-2xl text-white'
-      : 'backdrop-blur-2xl bg-black/20 w-[1200px] h-[585px] rounded-3xl flex p-6 gap-6 border border-white/10 shadow-2xl text-white'
+      ? 'backdrop-blur-2xl bg-black/20 w-[95%] lg:w-[1200px] h-auto rounded-3xl flex flex-col lg:flex-row p-4 lg:p-6 gap-6 border border-white/10 shadow-2xl text-white'
+      : 'backdrop-blur-2xl bg-black/20 w-[95%] lg:w-[1200px] h-auto lg:h-[585px] rounded-3xl flex flex-col lg:flex-row p-4 lg:p-6 gap-6 border border-white/10 shadow-2xl text-white overflow-y-auto lg:overflow-visible'
 
   return (
     <div className={containerClass}>

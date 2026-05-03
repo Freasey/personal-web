@@ -35,18 +35,18 @@ export const SmallCard = ({ card, index, isHovered, onMouseEnter, onMouseLeave, 
 
       <div className="absolute bottom-0 left-0 right-0 p-5">
         <div className="transition-all duration-500 translate-y-0 opacity-100">
-          <p className={`${index === 0 ? 'text-cyan-400' : 'text-teal-400'} text-xs font-semibold tracking-wider mb-1`}>
+          <p className={`${index === 0 ? 'text-cyan-400' : 'text-teal-400'} text-[10px] lg:text-xs font-semibold tracking-wider mb-1`}>
             {card.subtitle}
           </p>
         </div>
-        <h3 className="text-2xl font-bold text-white mb-2">
+        <h3 className="text-xl lg:text-2xl font-bold text-white mb-1 lg:mb-2">
           {card.title}
         </h3>
-        <p className="text-gray-300 text-sm transition-all duration-500 translate-y-0 opacity-100">
+        <p className="text-gray-300 text-xs lg:text-sm transition-all duration-500 translate-y-0 opacity-100">
           {card.description}
         </p>
         {card.cta && (
-          <p className="text-gray-200 text-xs mt-2 transition-all duration-500 translate-y-0 opacity-100">
+          <p className="text-gray-200 text-[10px] lg:text-xs mt-1 lg:mt-2 transition-all duration-500 translate-y-0 opacity-100">
             {card.cta}
           </p>
         )}
@@ -61,7 +61,7 @@ export const SmallCard = ({ card, index, isHovered, onMouseEnter, onMouseLeave, 
     return (
       <Link
         href={card.href}
-        className="relative w-[265px] h-full rounded-2xl overflow-hidden group cursor-pointer transform transition-all duration-500 hover:scale-[1.05] hover:z-10"
+        className="relative w-full flex-1 lg:flex-none lg:w-[265px] aspect-square lg:aspect-auto lg:h-full rounded-2xl overflow-hidden group cursor-pointer transform transition-all duration-500 hover:scale-[1.05] hover:z-10"
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         aria-label={card.title}
@@ -73,7 +73,7 @@ export const SmallCard = ({ card, index, isHovered, onMouseEnter, onMouseLeave, 
 
   return (
     <div
-      className="relative w-[265px] h-full rounded-2xl overflow-hidden group cursor-pointer transform transition-all duration-500 hover:scale-[1.05] hover:z-10"
+      className="relative w-full flex-1 lg:flex-none lg:w-[265px] aspect-square lg:aspect-auto lg:h-full rounded-2xl overflow-hidden group cursor-pointer transform transition-all duration-500 hover:scale-[1.05] hover:z-10"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={onClick}

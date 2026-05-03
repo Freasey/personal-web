@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { ProjectItem } from '../../types'
 import { FadeSection } from '../ui/FadeSection'
 
@@ -14,6 +15,7 @@ export const ProjectsView = ({
   onSelectProject,
   onBack
 }: ProjectsViewProps) => {
+  const [showDetailMobile, setShowDetailMobile] = useState(false)
   const selectedProject =
     projects.find((project) => project.id === selectedProjectId) ?? projects[0]
 
@@ -33,11 +35,11 @@ export const ProjectsView = ({
         </button>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-2">
+      <div className={`flex flex-col lg:flex-row gap-4 overflow-y-auto lg:overflow-x-auto pb-2 ${showDetailMobile ? 'hidden lg:flex' : 'flex'} max-h-[600px] lg:max-h-none`}>
         {projects.map((project) => (
           <article
             key={project.id}
-            className={`min-w-[260px] max-w-[260px] rounded-2xl border ${
+            className={`w-full lg:min-w-[260px] lg:max-w-[260px] shrink-0 rounded-2xl border ${
               project.id === selectedProject?.id ? 'border-white/40' : 'border-white/10'
             } bg-black/30 overflow-hidden flex flex-col`}
           >
@@ -55,8 +57,11 @@ export const ProjectsView = ({
               <p className="text-xs text-white/70">{project.summary}</p>
               <button
                 type="button"
-                onClick={() => onSelectProject(project.id)}
-                className="mt-auto text-xs text-white/80 hover:text-white border border-white/20 rounded-full px-3 py-2 transition"
+                onClick={() => {
+                  onSelectProject(project.id)
+                  setShowDetailMobile(true)
+                }}
+                className="mt-auto text-xs text-white/80 hover:text-white border border-white/20 rounded-full px-3 py-2 transition cursor-pointer"
               >
                 Detail Project
               </button>
@@ -65,18 +70,27 @@ export const ProjectsView = ({
         ))}
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-black/30 px-6 py-5">
-        <p className="text-sm uppercase tracking-[0.2em] text-white/60">Project Detail</p>
+      <div className={`rounded-2xl border border-white/10 bg-black/30 px-6 py-5 ${showDetailMobile ? 'block' : 'hidden lg:block'}`}>
+        <div className="flex justify-between items-center">
+          <p className="text-sm uppercase tracking-[0.2em] text-white/60">Project Detail</p>
+          <button
+            type="button"
+            onClick={() => setShowDetailMobile(false)}
+            className="lg:hidden text-xs text-white/70 hover:text-white border border-white/20 rounded-full px-3 py-1 transition cursor-pointer"
+          >
+            ← Back to List
+          </button>
+        </div>
         <h3 className="text-2xl font-semibold mt-3">{selectedProject?.name}</h3>
         <p className="text-sm text-white/70 mt-2 leading-relaxed">{selectedProject?.description}</p>
 
         <div className="mt-5">
           <p className="text-xs uppercase tracking-[0.2em] text-white/60">Gallery</p>
-          <div className="mt-3 flex gap-4 overflow-x-auto pb-2">
+          <div className="mt-3 flex flex-col lg:flex-row gap-4 overflow-y-auto lg:overflow-x-auto pb-2 max-h-[300px] lg:max-h-none">
             {selectedProject?.gallery.map((item) => (
               <figure
                 key={item.id}
-                className="min-w-[240px] max-w-[240px] rounded-xl border border-white/10 bg-black/40 overflow-hidden"
+                className="w-full lg:min-w-[240px] lg:max-w-[240px] shrink-0 rounded-xl border border-white/10 bg-black/40 overflow-hidden"
               >
                 <div className="h-32 relative">
                   {item.image ? (

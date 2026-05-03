@@ -60,7 +60,7 @@ export const WideCard = ({ card, isHovered, onMouseEnter, onMouseLeave, onClick 
     return (
       <Link
         href={card.href}
-        className="relative w-full h-[250px] rounded-2xl overflow-hidden group cursor-pointer transform transition-all duration-500 hover:scale-[1.02]"
+        className="relative w-full h-[200px] sm:h-[250px] rounded-2xl overflow-hidden group cursor-pointer transform transition-all duration-500 hover:scale-[1.02]"
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         aria-label={card.title}
@@ -72,7 +72,7 @@ export const WideCard = ({ card, isHovered, onMouseEnter, onMouseLeave, onClick 
 
   return (
     <div
-      className="relative w-full h-[250px] rounded-2xl overflow-hidden group cursor-pointer transform transition-all duration-500 hover:scale-[1.02]"
+      className="relative w-full h-[200px] sm:h-[250px] rounded-2xl overflow-hidden group cursor-pointer transform transition-all duration-500 hover:scale-[1.02]"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={onClick}

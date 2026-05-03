@@ -32,7 +32,7 @@ export const CardsView = ({
   }
 
   return (
-    <FadeSection className="w-full h-full flex gap-6">
+    <FadeSection className="w-full h-full flex flex-col lg:flex-row gap-6">
       <LargeCard
         card={largeCard}
         isHovered={hoveredCard === largeCard.id}
@@ -41,8 +41,8 @@ export const CardsView = ({
         onClick={onBio}
       />
 
-      <div className="w-[550px] h-full flex flex-col gap-6">
-        <div className="flex gap-6 h-[250px]">
+      <div className="w-full lg:w-[550px] h-auto lg:h-full flex flex-col gap-4 lg:gap-6">
+        <div className="flex flex-row gap-4 lg:gap-6 h-auto lg:h-[250px]">
           {smallCards.map((card, index) => (
             <SmallCard
               key={card.id}

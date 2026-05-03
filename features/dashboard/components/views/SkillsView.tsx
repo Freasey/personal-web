@@ -36,13 +36,13 @@ export const SkillsView = ({ skills, onBack }: SkillsViewProps) => {
         </button>
       </div>
 
-      <div className="flex gap-5 overflow-x-auto pb-2" onWheel={handleWheel}>
+      <div className="flex flex-col lg:flex-row gap-5 overflow-y-auto lg:overflow-x-auto pb-2" onWheel={handleWheel}>
         {skills.map((skill) => (
           <article
             key={skill.id}
-            className="min-w-[420px] max-w-[420px] rounded-2xl border border-white/10 bg-black/30 overflow-hidden"
+            className="w-full lg:min-w-[420px] lg:max-w-[420px] rounded-2xl border border-white/10 bg-black/30 overflow-hidden flex lg:block flex-col"
           >
-            <div className="h-56 relative">
+            <div className="h-40 sm:h-56 relative shrink-0">
               {skill.image ? (
                 <img src={skill.image} alt={skill.name} className="h-full w-full object-cover" />
               ) : (
