@@ -110,12 +110,13 @@ const mapCard = (row: SupabaseRow, fallback?: CardItem): CardItem => ({
   id: Number(readNumber(row, 'id') ?? fallback?.id ?? 0),
   image: readImage(row) ?? fallback?.image,
   imageAlt: readString(row, 'image_alt', 'alt') ?? fallback?.imageAlt,
+  backgroundSvg: readString(row, 'background_svg', 'backgroundSvg') ?? fallback?.backgroundSvg,
   title: readString(row, 'title', 'name') ?? fallback?.title ?? '',
   subtitle: readString(row, 'subtitle') ?? fallback?.subtitle ?? '',
   description: readString(row, 'description', 'summary') ?? fallback?.description ?? '',
   cta: readString(row, 'cta', 'call_to_action') ?? fallback?.cta,
   href: readString(row, 'href', 'link') ?? fallback?.href,
-  bgClass: readTheme(row) ?? fallback?.bgClass
+  bgClass: fallback?.bgClass
 })
 
 const mapSkill = (row: SupabaseRow, fallback?: SkillItem): SkillItem => ({

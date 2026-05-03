@@ -7,6 +7,7 @@ export interface CardItem {
   id: number
   image?: string
   imageAlt?: string
+  backgroundSvg?: string
   title: string
   subtitle: string
   description: string

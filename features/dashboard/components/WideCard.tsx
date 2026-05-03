@@ -12,7 +12,14 @@ interface WideCardProps {
 export const WideCard = ({ card, isHovered, onMouseEnter, onMouseLeave, onClick }: WideCardProps) => {
   const content = (
     <>
-      {card.image ? (
+      {card.backgroundSvg ? (
+        <img
+          src={card.backgroundSvg}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      ) : card.image ? (
         <img
           src={card.image}
           alt={card.imageAlt ?? card.title}

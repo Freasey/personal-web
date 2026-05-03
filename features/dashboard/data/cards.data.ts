@@ -20,7 +20,8 @@ export const getCards = (blobUrl: Record<string, string> | null): CardItem[] => 
     description: "Case studies across web apps, dashboards, and product MVPs.",
     cta: "Browse projects",
     href: "#projects",
-    bgClass: "from-cyan-900 via-sky-900 to-blue-800"
+    bgClass: "from-cyan-900 via-sky-900 to-blue-800",
+    backgroundSvg: "/assets/cards/bg-projects.svg"
   },
   {
     id: 3,
@@ -29,7 +30,8 @@ export const getCards = (blobUrl: Record<string, string> | null): CardItem[] => 
     description: "TypeScript, Next.js, UI engineering, APIs, and performance tuning.",
     cta: "View capabilities",
     href: "#skills",
-    bgClass: "from-emerald-900 via-teal-900 to-cyan-800"
+    bgClass: "from-emerald-900 via-teal-900 to-cyan-800",
+    backgroundSvg: "/assets/cards/bg-skills.svg"
   },
   {
     id: 4,
@@ -38,6 +40,7 @@ export const getCards = (blobUrl: Record<string, string> | null): CardItem[] => 
     description: "Open for freelance, full-time roles, and collaboration.",
     cta: "Start a conversation",
     href: "#contact",
-    bgClass: "from-orange-900 via-rose-900 to-red-800"
+    bgClass: "from-orange-900 via-rose-900 to-red-800",
+    backgroundSvg: "/assets/cards/bg-contact.svg"
   }
 ]

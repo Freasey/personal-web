@@ -13,7 +13,14 @@ interface SmallCardProps {
 export const SmallCard = ({ card, index, isHovered, onMouseEnter, onMouseLeave, onClick }: SmallCardProps) => {
   const content = (
     <>
-      {card.image ? (
+      {card.backgroundSvg ? (
+        <img
+          src={card.backgroundSvg}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      ) : card.image ? (
         <img
           src={card.image}
           alt={card.imageAlt ?? card.title}
