@@ -50,8 +50,6 @@ export const WideCard = ({ card, onClick }: WideCardProps) => {
           </div>
         )}
       </div>
-
-      <div className="absolute top-2 right-2 sm:top-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 border-t-2 border-r-2 border-orange-400/50 rounded-tr-xl transition-all duration-300 group-hover:w-9 group-hover:h-9 sm:group-hover:w-10 sm:group-hover:h-10" />
     </>
   )
 

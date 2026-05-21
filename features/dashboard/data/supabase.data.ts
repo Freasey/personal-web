@@ -56,7 +56,7 @@ const readImage = (row: SupabaseRow) =>
   readString(row, 'image_url', 'image', 'url', 'pathname', 'media_url')
 
 const readTheme = (row: SupabaseRow) =>
-  readString(row, 'bg_class', 'theme_key', 'color_token', 'style_key')
+  readString(row, 'theme_key', 'bg_class', 'color_token', 'style_key')
 
 const isActiveRow = (row: SupabaseRow) => readBoolean(row, 'is_active') !== false
 

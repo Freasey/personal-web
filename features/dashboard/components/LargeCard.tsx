@@ -41,8 +41,6 @@ export const LargeCard = ({ card, onClick }: LargeCardProps) => {
           </div>
         )}
       </div>
-
-      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 w-10 h-10 sm:w-12 sm:h-12 border-t-2 border-r-2 border-purple-400/50 rounded-tr-2xl transition-all duration-300 group-hover:w-14 group-hover:h-14 sm:group-hover:w-16 sm:group-hover:h-16" />
     </>
   )
 

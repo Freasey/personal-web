@@ -52,8 +52,6 @@ export const SmallCard = ({ card, index, onClick }: SmallCardProps) => {
           </div>
         )}
       </div>
-
-      <div className={`absolute top-2 right-2 sm:top-3 sm:right-3 w-6 h-6 sm:w-8 sm:h-8 border-t-2 border-r-2 ${index === 0 ? 'border-cyan-400/50' : 'border-teal-400/50'} rounded-tr-xl transition-all duration-300 group-hover:w-8 group-hover:h-8 sm:group-hover:w-10 sm:group-hover:h-10`} />
     </>
   )
 
