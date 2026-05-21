@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useBlobs } from '../hooks/useBlobs'
-import { getStaticDashboardData, loadDashboardData } from '../data/supabase.data'
+import { getStaticDashboardData, type DashboardData } from '../data/dashboard.data'
 import { BioView, CardsView, ContactView, ProjectsView, SkillsView } from './views'
 
 type DashboardView = 'cards' | 'bio' | 'projects' | 'skills' | 'contact'
@@ -20,10 +20,22 @@ export const Dashboard = () => {
     let isCancelled = false
 
     const syncData = async () => {
-      const nextData = await loadDashboardData(blobUrl)
+      try {
+        const response = await fetch('/api/dashboard-data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ blobUrl }),
+        })
 
-      if (!isCancelled) {
-        setDashboardData(nextData)
+        if (!response.ok) return
+
+        const nextData = (await response.json()) as DashboardData
+
+        if (!isCancelled) {
+          setDashboardData(nextData)
+        }
+      } catch {
+        // keep static fallback
       }
     }
 

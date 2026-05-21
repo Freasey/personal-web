@@ -1,28 +1,21 @@
+import 'server-only'
+
 import type {
   CardItem,
   ContactItem,
   ProfileData,
   ProjectItem,
-  SkillItem
+  SkillItem,
 } from '../types'
-import { getCards } from './cards.data'
-import { getContactItems } from './contacts.data'
-import { getProfileData } from './profile.data'
-import { getProjectsData } from './projects.data'
-import { getSkillsGallery } from './skills.data'
+import {
+  createStaticDashboardData,
+  type DashboardData,
+} from './dashboard.data'
 
 type SupabaseRow = Record<string, unknown>
 
-interface DashboardData {
-  cards: CardItem[]
-  profile: ProfileData
-  projects: ProjectItem[]
-  skills: SkillItem[]
-  contacts: ContactItem[]
-}
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
 
 const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey)
 
@@ -142,14 +135,6 @@ const mapProjectGalleryItem = (row: SupabaseRow, fallback?: ProjectItem['gallery
   bgClass: readTheme(row) ?? fallback?.bgClass
 })
 
-const createStaticDashboardData = (blobUrl: Record<string, string> | null): DashboardData => ({
-  cards: getCards(blobUrl),
-  profile: getProfileData(),
-  projects: getProjectsData(blobUrl),
-  skills: getSkillsGallery(blobUrl),
-  contacts: getContactItems()
-})
-
 const mapProfile = (row: SupabaseRow, fallback: ProfileData): ProfileData => ({
   name: readString(row, 'name') ?? fallback.name,
   role: readString(row, 'role', 'title') ?? fallback.role,
@@ -175,8 +160,6 @@ const mapProject = (row: SupabaseRow, fallback?: ProjectItem): ProjectItem => ({
   year: readString(row, 'year') ?? fallback?.year ?? '',
   role: readString(row, 'role', 'position') ?? fallback?.role ?? ''
 })
-
-export const getStaticDashboardData = createStaticDashboardData
 
 export const loadDashboardData = async (blobUrl: Record<string, string> | null): Promise<DashboardData> => {
   const staticData = createStaticDashboardData(blobUrl)
