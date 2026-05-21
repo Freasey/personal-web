@@ -3,14 +3,11 @@ import type { CardItem } from '../types'
 
 interface SmallCardProps {
   card: CardItem
-  isHovered: boolean
   index: number
-  onMouseEnter: () => void
-  onMouseLeave: () => void
   onClick?: () => void
 }
 
-export const SmallCard = ({ card, index, isHovered, onMouseEnter, onMouseLeave, onClick }: SmallCardProps) => {
+export const SmallCard = ({ card, index, onClick }: SmallCardProps) => {
   const content = (
     <>
       {card.backgroundSvg ? (
@@ -33,27 +30,30 @@ export const SmallCard = ({ card, index, isHovered, onMouseEnter, onMouseLeave, 
       )}
       <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-95 transition-opacity duration-300" />
 
-      <div className="absolute bottom-0 left-0 right-0 p-3 lg:p-5">
+      <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 lg:p-5">
         <div className="transition-all duration-500 translate-y-0 opacity-100">
           <p className={`${index === 0 ? 'text-cyan-400' : 'text-teal-400'} text-[9px] lg:text-xs font-semibold tracking-wider mb-1`}>
             {card.subtitle}
           </p>
         </div>
-        <h3 className="text-base lg:text-2xl font-bold text-white mb-1 lg:mb-2">
+        <h3 className="text-sm sm:text-lg lg:text-2xl font-bold text-white mb-1 lg:mb-2">
           {card.title}
         </h3>
-        <p className="text-gray-300 text-[10px] lg:text-sm line-clamp-2 lg:line-clamp-none transition-all duration-500 translate-y-0 opacity-100">
+        <p className="text-gray-300 text-[10px] sm:text-xs lg:text-sm line-clamp-2 lg:line-clamp-none transition-all duration-500 translate-y-0 opacity-100">
           {card.description}
         </p>
         {card.cta && (
-          <p className="text-gray-200 text-[9px] lg:text-xs mt-1 lg:mt-2 transition-all duration-500 translate-y-0 opacity-100">
-            {card.cta}
-          </p>
+          <div className="mt-2 sm:mt-3 flex justify-end">
+            <span className="inline-flex items-center gap-1 text-[10px] lg:text-[11px] font-medium text-white bg-white/15 border border-white/25 rounded-full px-2 sm:px-2.5 py-1 backdrop-blur-sm transition-all duration-300 group-hover:bg-white/25 group-hover:border-white/40">
+              <span className="hidden sm:inline">{card.cta}</span>
+              <span className="sm:hidden">View</span>
+              <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
+            </span>
+          </div>
         )}
-        <div className={`h-0.5 bg-linear-to-r ${index === 0 ? 'from-blue-500 to-cyan-400' : 'from-green-500 to-teal-400'} mt-3 rounded-full transition-all duration-500 ${isHovered ? 'w-16' : 'w-0'}`} />
       </div>
 
-      <div className={`absolute top-3 right-3 w-8 h-8 border-t-2 border-r-2 ${index === 0 ? 'border-cyan-400/50' : 'border-teal-400/50'} rounded-tr-xl transition-all duration-300 group-hover:w-10 group-hover:h-10`} />
+      <div className={`absolute top-2 right-2 sm:top-3 sm:right-3 w-6 h-6 sm:w-8 sm:h-8 border-t-2 border-r-2 ${index === 0 ? 'border-cyan-400/50' : 'border-teal-400/50'} rounded-tr-xl transition-all duration-300 group-hover:w-8 group-hover:h-8 sm:group-hover:w-10 sm:group-hover:h-10`} />
     </>
   )
 
@@ -61,9 +61,7 @@ export const SmallCard = ({ card, index, isHovered, onMouseEnter, onMouseLeave, 
     return (
       <Link
         href={card.href}
-        className="relative w-full flex-1 lg:flex-none lg:w-[265px] aspect-square lg:aspect-auto lg:h-full rounded-2xl overflow-hidden group cursor-pointer transform transition-all duration-500 hover:scale-[1.05] hover:z-10"
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
+        className="relative w-full lg:w-[265px] aspect-square lg:aspect-auto lg:h-full rounded-2xl overflow-hidden group cursor-pointer transform transition-all duration-500 hover:scale-[1.03] lg:hover:scale-[1.05] hover:z-10"
         aria-label={card.title}
       >
         {content}
@@ -73,9 +71,7 @@ export const SmallCard = ({ card, index, isHovered, onMouseEnter, onMouseLeave, 
 
   return (
     <div
-      className="relative w-full flex-1 lg:flex-none lg:w-[265px] aspect-square lg:aspect-auto lg:h-full rounded-2xl overflow-hidden group cursor-pointer transform transition-all duration-500 hover:scale-[1.05] hover:z-10"
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
+      className="relative w-full lg:w-[265px] aspect-square lg:aspect-auto lg:h-full rounded-2xl overflow-hidden group cursor-pointer transform transition-all duration-500 hover:scale-[1.03] lg:hover:scale-[1.05] hover:z-10"
       onClick={onClick}
     >
       {content}

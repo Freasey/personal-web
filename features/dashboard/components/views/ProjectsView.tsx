@@ -20,16 +20,16 @@ export const ProjectsView = ({
     projects.find((project) => project.id === selectedProjectId) ?? projects[0]
 
   return (
-    <FadeSection className="w-full rounded-2xl border border-white/10 bg-white/5 p-6 flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm uppercase tracking-[0.3em] text-white/60">Projects</p>
-          <h2 className="text-2xl font-bold mt-2">Selected Work</h2>
+    <FadeSection className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6 flex flex-col gap-4 sm:gap-6">
+      <div className="flex items-start sm:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs sm:text-sm uppercase tracking-[0.25em] sm:tracking-[0.3em] text-white/60">Projects</p>
+          <h2 className="text-xl sm:text-2xl font-bold mt-1 sm:mt-2">Selected Work</h2>
         </div>
         <button
           type="button"
           onClick={onBack}
-          className="text-xs text-white/70 hover:text-white border border-white/20 rounded-full px-4 py-2 transition cursor-pointer"
+          className="shrink-0 text-xs text-white/70 hover:text-white border border-white/20 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition cursor-pointer"
         >
           Back to menu
         </button>
@@ -43,7 +43,7 @@ export const ProjectsView = ({
               project.id === selectedProject?.id ? 'border-white/40' : 'border-white/10'
             } bg-black/30 overflow-hidden flex flex-col`}
           >
-            <div className="h-36 relative">
+            <div className="h-36 sm:h-40 relative">
               {project.image ? (
                 <img src={project.image} alt={project.name} className="h-full w-full object-cover" />
               ) : (
@@ -52,9 +52,9 @@ export const ProjectsView = ({
                 />
               )}
             </div>
-            <div className="p-4 flex flex-col gap-2 flex-1">
+            <div className="p-3 sm:p-4 flex flex-col gap-2 flex-1">
               <p className="text-sm font-semibold">{project.name}</p>
-              <p className="text-xs text-white/70">{project.summary}</p>
+              <p className="text-xs text-white/70 leading-relaxed">{project.summary}</p>
               <button
                 type="button"
                 onClick={() => {
@@ -70,29 +70,29 @@ export const ProjectsView = ({
         ))}
       </div>
 
-      <div className={`rounded-2xl border border-white/10 bg-black/30 px-6 py-5 ${showDetailMobile ? 'block' : 'hidden lg:block'}`}>
-        <div className="flex justify-between items-center">
-          <p className="text-sm uppercase tracking-[0.2em] text-white/60">Project Detail</p>
+      <div className={`rounded-2xl border border-white/10 bg-black/30 px-4 sm:px-6 py-4 sm:py-5 ${showDetailMobile ? 'block' : 'hidden lg:block'}`}>
+        <div className="flex justify-between items-center gap-3">
+          <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-white/60">Project Detail</p>
           <button
             type="button"
             onClick={() => setShowDetailMobile(false)}
-            className="lg:hidden text-xs text-white/70 hover:text-white border border-white/20 rounded-full px-3 py-1 transition cursor-pointer"
+            className="lg:hidden shrink-0 text-xs text-white/70 hover:text-white border border-white/20 rounded-full px-3 py-1.5 transition cursor-pointer"
           >
             ← Back to List
           </button>
         </div>
-        <h3 className="text-2xl font-semibold mt-3">{selectedProject?.name}</h3>
+        <h3 className="text-xl sm:text-2xl font-semibold mt-2 sm:mt-3 wrap-break-word">{selectedProject?.name}</h3>
         <p className="text-sm text-white/70 mt-2 leading-relaxed">{selectedProject?.description}</p>
 
-        <div className="mt-5">
+        <div className="mt-4 sm:mt-5">
           <p className="text-xs uppercase tracking-[0.2em] text-white/60">Gallery</p>
-          <div className="mt-3 flex flex-col lg:flex-row gap-4 lg:overflow-x-auto pb-2">
+          <div className="mt-3 flex flex-col lg:flex-row gap-3 sm:gap-4 lg:overflow-x-auto pb-2">
             {selectedProject?.gallery.map((item) => (
               <figure
                 key={item.id}
                 className="w-full lg:min-w-[240px] lg:max-w-[240px] shrink-0 rounded-xl border border-white/10 bg-black/40 overflow-hidden"
               >
-                <div className="h-32 relative">
+                <div className="h-36 sm:h-32 relative">
                   {item.image ? (
                     <img src={item.image} alt={item.alt} className="h-full w-full object-cover" />
                   ) : (
@@ -107,7 +107,7 @@ export const ProjectsView = ({
           </div>
         </div>
 
-        <div className="mt-5">
+        <div className="mt-4 sm:mt-5">
           <p className="text-xs uppercase tracking-[0.2em] text-white/60">Highlights</p>
           <ul className="mt-3 space-y-2 text-sm text-white/80">
             {selectedProject?.highlights.map((item) => (
@@ -119,7 +119,7 @@ export const ProjectsView = ({
           </ul>
         </div>
 
-        <div className="mt-5">
+        <div className="mt-4 sm:mt-5">
           <p className="text-xs uppercase tracking-[0.2em] text-white/60">Responsibilities</p>
           <ul className="mt-3 space-y-2 text-sm text-white/80">
             {selectedProject?.responsibilities.map((item) => (
@@ -131,18 +131,18 @@ export const ProjectsView = ({
           </ul>
         </div>
 
-        <div className="mt-5">
+        <div className="mt-4 sm:mt-5">
           <p className="text-xs uppercase tracking-[0.2em] text-white/60">Tech Stack</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {selectedProject?.stack.map((item) => (
-              <span key={item} className="text-xs bg-white/10 text-white/80 px-3 py-1 rounded-full">
+              <span key={item} className="text-[11px] sm:text-xs bg-white/10 text-white/80 px-2.5 sm:px-3 py-1 rounded-full">
                 {item}
               </span>
             ))}
           </div>
         </div>
 
-        <div className="mt-5 text-xs text-white/60">
+        <div className="mt-4 sm:mt-5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/60">
           <p>Role: {selectedProject?.role}</p>
           <p>Year: {selectedProject?.year}</p>
         </div>

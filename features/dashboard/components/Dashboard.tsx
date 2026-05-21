@@ -7,7 +7,6 @@ import { BioView, CardsView, ContactView, ProjectsView, SkillsView } from './vie
 type DashboardView = 'cards' | 'bio' | 'projects' | 'skills' | 'contact'
 
 export const Dashboard = () => {
-  const [hoveredCard, setHoveredCard] = useState<number | null>(null)
   const [view, setView] = useState<DashboardView>('cards')
   const { blobUrl } = useBlobs()
   const [dashboardData, setDashboardData] = useState(() => getStaticDashboardData(blobUrl))
@@ -51,12 +50,15 @@ export const Dashboard = () => {
     })
   }, [projects])
 
+  const baseContainer =
+    'backdrop-blur-2xl bg-black/20 w-full max-w-[1200px] rounded-2xl sm:rounded-3xl flex flex-col lg:flex-row p-3 sm:p-4 lg:p-6 gap-4 sm:gap-6 border border-white/10 shadow-2xl text-white'
+
   const containerClass =
     view === 'projects'
-      ? 'backdrop-blur-2xl bg-black/20 w-[95%] lg:w-[1200px] rounded-3xl flex flex-col lg:flex-row p-4 lg:p-6 gap-6 border border-white/10 shadow-2xl text-white'
+      ? `${baseContainer}`
       : view === 'contact'
-      ? 'backdrop-blur-2xl bg-black/20 w-[95%] lg:w-[1200px] h-auto rounded-3xl flex flex-col lg:flex-row p-4 lg:p-6 gap-6 border border-white/10 shadow-2xl text-white'
-      : 'backdrop-blur-2xl bg-black/20 w-[95%] lg:w-[1200px] h-auto lg:h-[585px] rounded-3xl flex flex-col lg:flex-row p-4 lg:p-6 gap-6 border border-white/10 shadow-2xl text-white overflow-y-auto lg:overflow-visible'
+      ? `${baseContainer} h-auto`
+      : `${baseContainer} h-auto lg:h-[585px] overflow-y-auto lg:overflow-visible`
 
   return (
     <div className={containerClass}>
@@ -76,8 +78,6 @@ export const Dashboard = () => {
       ) : (
         <CardsView
           cards={cards}
-          hoveredCard={hoveredCard}
-          onHover={setHoveredCard}
           onBio={() => setView('bio')}
           onProjects={() => setView('projects')}
           onSkills={() => setView('skills')}

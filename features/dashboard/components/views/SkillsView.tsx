@@ -21,22 +21,22 @@ export const SkillsView = ({ skills, onBack }: SkillsViewProps) => {
   }
 
   return (
-    <FadeSection className="w-full rounded-2xl border border-white/10 bg-white/5 p-6 flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm uppercase tracking-[0.3em] text-white/60">Skills & Expertise</p>
-          <h2 className="text-2xl font-bold mt-2">Capabilities</h2>
+    <FadeSection className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6 flex flex-col gap-4 sm:gap-6">
+      <div className="flex items-start sm:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs sm:text-sm uppercase tracking-[0.25em] sm:tracking-[0.3em] text-white/60">Skills & Expertise</p>
+          <h2 className="text-xl sm:text-2xl font-bold mt-1 sm:mt-2">Capabilities</h2>
         </div>
         <button
           type="button"
           onClick={onBack}
-          className="text-xs text-white/70 hover:text-white border border-white/20 rounded-full px-4 py-2 transition cursor-pointer"
+          className="shrink-0 text-xs text-white/70 hover:text-white border border-white/20 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition cursor-pointer"
         >
           Back to menu
         </button>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-5 overflow-y-auto lg:overflow-x-auto pb-2" onWheel={handleWheel}>
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-5 overflow-y-auto lg:overflow-x-auto pb-2" onWheel={handleWheel}>
         {skills.map((skill) => (
           <article
             key={skill.id}
@@ -51,8 +51,8 @@ export const SkillsView = ({ skills, onBack }: SkillsViewProps) => {
                 />
               )}
             </div>
-            <div className="p-5">
-              <p className="text-lg font-semibold">{skill.name}</p>
+            <div className="p-4 sm:p-5">
+              <p className="text-base sm:text-lg font-semibold">{skill.name}</p>
               <p className="text-sm text-white/70 mt-2 leading-relaxed">{skill.description}</p>
             </div>
           </article>

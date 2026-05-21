@@ -6,8 +6,6 @@ import { FadeSection } from '../ui/FadeSection'
 
 interface CardsViewProps {
   cards: CardItem[]
-  hoveredCard: number | null
-  onHover: (id: number | null) => void
   onBio: () => void
   onProjects: () => void
   onSkills: () => void
@@ -16,8 +14,6 @@ interface CardsViewProps {
 
 export const CardsView = ({
   cards,
-  hoveredCard,
-  onHover,
   onBio,
   onProjects,
   onSkills,
@@ -32,25 +28,16 @@ export const CardsView = ({
   }
 
   return (
-    <FadeSection className="w-full h-full flex flex-col lg:flex-row gap-6">
-      <LargeCard
-        card={largeCard}
-        isHovered={hoveredCard === largeCard.id}
-        onMouseEnter={() => onHover(largeCard.id)}
-        onMouseLeave={() => onHover(null)}
-        onClick={onBio}
-      />
+    <FadeSection className="w-full h-full flex flex-col lg:flex-row gap-4 sm:gap-6">
+      <LargeCard card={largeCard} onClick={onBio} />
 
-      <div className="w-full lg:w-[550px] h-auto lg:h-full flex flex-col gap-4 lg:gap-6">
-        <div className="flex flex-row gap-4 lg:gap-6 h-auto lg:h-[250px]">
+      <div className="w-full lg:w-[550px] h-auto lg:h-full flex flex-col gap-3 sm:gap-4 lg:gap-6">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6 lg:h-[250px]">
           {smallCards.map((card, index) => (
             <SmallCard
               key={card.id}
               card={card}
               index={index}
-              isHovered={hoveredCard === card.id}
-              onMouseEnter={() => onHover(card.id)}
-              onMouseLeave={() => onHover(null)}
               onClick={
                 card.id === 2
                   ? onProjects
@@ -62,13 +49,7 @@ export const CardsView = ({
           ))}
         </div>
 
-        <WideCard
-          card={contactCard}
-          isHovered={hoveredCard === contactCard.id}
-          onMouseEnter={() => onHover(contactCard.id)}
-          onMouseLeave={() => onHover(null)}
-          onClick={onContact}
-        />
+        <WideCard card={contactCard} onClick={onContact} />
       </div>
     </FadeSection>
   )
