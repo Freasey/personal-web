@@ -15,7 +15,7 @@ const stats = [
 const activity = [
   { title: 'Updated portfolio cards', time: 'Today', detail: 'Refined CTAs and copy on home view.' },
   { title: 'Deployed personal site', time: 'Yesterday', detail: 'Shipped to production via Vercel.' },
-  { title: 'Added new project entry', time: '2 days ago', detail: 'Synced from Supabase to dashboard.' },
+  { title: 'Added new project entry', time: '2 days ago', detail: 'Synced from Neon to dashboard.' },
 ]
 
 export default function DashboardPage() {
@@ -155,12 +155,12 @@ export default function DashboardPage() {
               </li>
               <li>
                 <a
-                  href="https://supabase.com/dashboard"
+                  href="https://console.neon.tech/"
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 transition hover:border-white/15 hover:bg-white/[0.05]"
                 >
-                  <span>Supabase</span>
+                  <span>Neon</span>
                   <span className="text-white/40">↗</span>
                 </a>
               </li>

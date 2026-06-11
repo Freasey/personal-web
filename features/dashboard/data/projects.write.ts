@@ -1,11 +1,8 @@
 import 'server-only'
 
+import { randomUUID } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
-
-const supabaseUrl = process.env.SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-const hasSupabaseConfig = Boolean(supabaseUrl && supabaseServiceRoleKey)
+import { getSql } from '@/lib/db'
 
 export interface ProjectGalleryInput {
   imageId?: string | null
@@ -50,133 +47,38 @@ export interface ProjectGalleryRawRow {
   sort_order: number
 }
 
-const ensureConfig = () => {
-  if (!hasSupabaseConfig || !supabaseUrl || !supabaseServiceRoleKey) {
-    throw new Error(
-      'Supabase write requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY env vars.',
-    )
-  }
-  return { url: supabaseUrl, key: supabaseServiceRoleKey }
-}
-
-const restHeaders = (key: string, prefer?: string) => {
-  const headers: Record<string, string> = {
-    apikey: key,
-    Authorization: `Bearer ${key}`,
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  }
-  if (prefer) {
-    headers.Prefer = prefer
-  }
-  return headers
-}
-
-const restFetch = async (
-  path: string,
-  init: RequestInit & { searchParams?: Record<string, string> } = {},
+// Build the parameterized child-row insert queries for a project. Returned
+// unexecuted so they can run inside a single sql.transaction([...]).
+const childInsertQueries = (
+  sql: ReturnType<typeof getSql>,
+  projectId: string,
+  input: ProjectInput,
 ) => {
-  const { url, key } = ensureConfig()
-  const endpoint = new URL(`/rest/v1/${path}`, url)
-  if (init.searchParams) {
-    for (const [k, v] of Object.entries(init.searchParams)) {
-      endpoint.searchParams.set(k, v)
-    }
-  }
+  const queries: ReturnType<typeof sql>[] = []
 
-  const response = await fetch(endpoint.toString(), {
-    ...init,
-    headers: { ...restHeaders(key, (init.headers as Record<string, string>)?.Prefer), ...(init.headers ?? {}) },
-    cache: 'no-store',
+  input.gallery.forEach((item, index) => {
+    queries.push(sql`
+      insert into project_gallery (project_id, asset_id, caption, sort_order, is_active)
+      values (${projectId}, ${item.imageId ?? null}, ${item.caption}, ${index}, true)`)
+  })
+  input.stack.forEach((value, index) => {
+    queries.push(sql`
+      insert into project_stacks (project_id, stack_name, sort_order, is_active)
+      values (${projectId}, ${value}, ${index}, true)`)
+  })
+  input.highlights.forEach((value, index) => {
+    queries.push(sql`
+      insert into project_highlights (project_id, content, sort_order, is_active)
+      values (${projectId}, ${value}, ${index}, true)`)
+  })
+  input.responsibilities.forEach((value, index) => {
+    queries.push(sql`
+      insert into project_responsibilities (project_id, content, sort_order, is_active)
+      values (${projectId}, ${value}, ${index}, true)`)
   })
 
-  if (!response.ok) {
-    const text = await response.text().catch(() => '')
-    throw new Error(`Supabase ${init.method ?? 'GET'} ${path} failed: ${response.status} ${text}`)
-  }
-
-  const text = await response.text()
-  if (!text) return null
-  try {
-    return JSON.parse(text)
-  } catch {
-    return null
-  }
+  return queries
 }
-
-const insertChildren = async (
-  table: string,
-  rows: Record<string, unknown>[],
-) => {
-  if (rows.length === 0) return
-  await restFetch(table, {
-    method: 'POST',
-    headers: { Prefer: 'return=minimal' },
-    body: JSON.stringify(rows),
-  })
-}
-
-const deleteChildren = async (table: string, projectId: string) => {
-  await restFetch(table, {
-    method: 'DELETE',
-    headers: { Prefer: 'return=minimal' },
-    searchParams: { project_id: `eq.${projectId}` },
-  })
-}
-
-const writeProjectChildren = async (projectId: string, input: ProjectInput) => {
-  await Promise.all([
-    insertChildren(
-      'project_gallery',
-      input.gallery.map((item, index) => ({
-        project_id: projectId,
-        asset_id: item.imageId ?? null,
-        caption: item.caption,
-        sort_order: index,
-        is_active: true,
-      })),
-    ),
-    insertChildren(
-      'project_stacks',
-      input.stack.map((value, index) => ({
-        project_id: projectId,
-        stack: value,
-        sort_order: index,
-        is_active: true,
-      })),
-    ),
-    insertChildren(
-      'project_highlights',
-      input.highlights.map((value, index) => ({
-        project_id: projectId,
-        highlight: value,
-        sort_order: index,
-        is_active: true,
-      })),
-    ),
-    insertChildren(
-      'project_responsibilities',
-      input.responsibilities.map((value, index) => ({
-        project_id: projectId,
-        responsibility: value,
-        sort_order: index,
-        is_active: true,
-      })),
-    ),
-  ])
-}
-
-const buildProjectRow = (input: ProjectInput) => ({
-  name: input.name,
-  slug: input.slug ?? null,
-  summary: input.summary || null,
-  description: input.description || null,
-  image_id: input.imageId ?? null,
-  year: input.year ?? null,
-  role: input.role || null,
-  sort_order: input.sort_order ?? 0,
-  is_active: input.is_active ?? true,
-})
 
 const revalidatePublic = () => {
   try {
@@ -189,54 +91,60 @@ const revalidatePublic = () => {
 }
 
 export const createProject = async (input: ProjectInput): Promise<string> => {
-  const inserted = (await restFetch('projects', {
-    method: 'POST',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify([buildProjectRow(input)]),
-  })) as Array<{ id: string }> | null
+  const sql = getSql()
+  const id = randomUUID()
 
-  const projectId = inserted?.[0]?.id
-  if (!projectId) {
-    throw new Error('Failed to create project: missing id in response.')
-  }
+  await sql.transaction([
+    sql`
+      insert into projects (id, name, slug, summary, description, image_id, year, role, sort_order, is_active)
+      values (${id}, ${input.name}, ${input.slug ?? null}, ${input.summary || null},
+              ${input.description || null}, ${input.imageId ?? null}, ${input.year ?? null},
+              ${input.role || null}, ${input.sort_order ?? 0}, ${input.is_active ?? true})`,
+    ...childInsertQueries(sql, id, input),
+  ])
 
-  await writeProjectChildren(projectId, input)
   revalidatePublic()
-  return projectId
+  return id
 }
 
 export const updateProject = async (id: string, input: ProjectInput) => {
-  await restFetch('projects', {
-    method: 'PATCH',
-    headers: { Prefer: 'return=minimal' },
-    searchParams: { id: `eq.${id}` },
-    body: JSON.stringify(buildProjectRow(input)),
-  })
+  const sql = getSql()
 
-  await Promise.all([
-    deleteChildren('project_gallery', id),
-    deleteChildren('project_stacks', id),
-    deleteChildren('project_highlights', id),
-    deleteChildren('project_responsibilities', id),
+  await sql.transaction([
+    sql`
+      update projects set
+        name = ${input.name},
+        slug = ${input.slug ?? null},
+        summary = ${input.summary || null},
+        description = ${input.description || null},
+        image_id = ${input.imageId ?? null},
+        year = ${input.year ?? null},
+        role = ${input.role || null},
+        sort_order = ${input.sort_order ?? 0},
+        is_active = ${input.is_active ?? true},
+        updated_at = now()
+      where id = ${id}`,
+    sql`delete from project_gallery where project_id = ${id}`,
+    sql`delete from project_stacks where project_id = ${id}`,
+    sql`delete from project_highlights where project_id = ${id}`,
+    sql`delete from project_responsibilities where project_id = ${id}`,
+    ...childInsertQueries(sql, id, input),
   ])
 
-  await writeProjectChildren(id, input)
   revalidatePublic()
 }
 
 export const deleteProject = async (id: string) => {
-  await Promise.all([
-    deleteChildren('project_gallery', id),
-    deleteChildren('project_stacks', id),
-    deleteChildren('project_highlights', id),
-    deleteChildren('project_responsibilities', id),
-  ])
+  const sql = getSql()
 
-  await restFetch('projects', {
-    method: 'DELETE',
-    headers: { Prefer: 'return=minimal' },
-    searchParams: { id: `eq.${id}` },
-  })
+  // FK cascade also removes children, but delete explicitly to be safe.
+  await sql.transaction([
+    sql`delete from project_gallery where project_id = ${id}`,
+    sql`delete from project_stacks where project_id = ${id}`,
+    sql`delete from project_highlights where project_id = ${id}`,
+    sql`delete from project_responsibilities where project_id = ${id}`,
+    sql`delete from projects where id = ${id}`,
+  ])
 
   revalidatePublic()
 }
@@ -244,22 +152,15 @@ export const deleteProject = async (id: string) => {
 export const getProjectRowForEdit = async (
   id: string,
 ): Promise<{ project: ProjectRawRow; gallery: ProjectGalleryRawRow[] } | null> => {
-  const projects = (await restFetch('projects', {
-    method: 'GET',
-    searchParams: { id: `eq.${id}`, select: '*' },
-  })) as ProjectRawRow[] | null
+  const sql = getSql()
 
-  const project = projects?.[0]
+  const projects = (await sql`select * from projects where id = ${id}`) as ProjectRawRow[]
+  const project = projects[0]
   if (!project) return null
 
-  const gallery = ((await restFetch('project_gallery', {
-    method: 'GET',
-    searchParams: {
-      project_id: `eq.${id}`,
-      select: '*',
-      order: 'sort_order.asc',
-    },
-  })) as ProjectGalleryRawRow[] | null) ?? []
+  const gallery = (await sql`
+    select * from project_gallery where project_id = ${id} order by sort_order asc
+  `) as ProjectGalleryRawRow[]
 
   return { project, gallery }
 }

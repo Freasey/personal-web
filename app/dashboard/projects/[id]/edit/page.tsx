@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { loadDashboardData } from '@/features/dashboard/data/supabase.data'
+import { loadDashboardData } from '@/features/dashboard/data/neon.data'
 import {
   ProjectForm,
   type ProjectFormValue,
@@ -29,7 +29,9 @@ export default async function EditProjectPage({ params }: PageProps) {
     name: project.name,
     summary: project.summary,
     description: project.description,
-    image: project.image ?? '',
+    imageId: project.imageId ?? null,
+    imageUrl: project.image ?? null,
+    imageKind: project.imageKind ?? null,
     bgClass: project.bgClass ?? '',
     year: project.year,
     role: project.role,
@@ -39,7 +41,9 @@ export default async function EditProjectPage({ params }: PageProps) {
     gallery: project.gallery.map((item) => ({
       alt: item.alt,
       caption: item.caption,
-      image: item.image ?? '',
+      imageId: item.imageId ?? null,
+      imageUrl: item.image ?? null,
+      imageKind: item.imageKind ?? null,
       bgClass: item.bgClass ?? '',
     })),
   }

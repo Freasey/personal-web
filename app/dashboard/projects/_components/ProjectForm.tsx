@@ -2,11 +2,14 @@
 
 import { useRouter } from 'next/navigation'
 import { useState, type FormEvent } from 'react'
+import { MediaPicker, type MediaKind, type MediaPickerValue } from './MediaPicker'
 
 export interface ProjectFormGalleryValue {
   alt: string
   caption: string
-  image: string
+  imageId: string | null
+  imageUrl: string | null
+  imageKind: MediaKind | null
   bgClass: string
 }
 
@@ -14,7 +17,9 @@ export interface ProjectFormValue {
   name: string
   summary: string
   description: string
-  image: string
+  imageId: string | null
+  imageUrl: string | null
+  imageKind: MediaKind | null
   bgClass: string
   year: string
   role: string
@@ -28,7 +33,9 @@ export const emptyProjectFormValue: ProjectFormValue = {
   name: '',
   summary: '',
   description: '',
-  image: '',
+  imageId: null,
+  imageUrl: null,
+  imageKind: null,
   bgClass: '',
   year: '',
   role: '',
@@ -109,13 +116,37 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
   const addGalleryItem = () =>
     setValue((prev) => ({
       ...prev,
-      gallery: [...prev.gallery, { alt: '', caption: '', image: '', bgClass: '' }],
+      gallery: [
+        ...prev.gallery,
+        {
+          alt: '',
+          caption: '',
+          imageId: null,
+          imageUrl: null,
+          imageKind: null,
+          bgClass: '',
+        },
+      ],
     }))
 
   const removeGalleryItem = (index: number) =>
     setValue((prev) => ({
       ...prev,
       gallery: prev.gallery.filter((_, i) => i !== index),
+    }))
+
+  const heroPickerValue: MediaPickerValue = {
+    id: value.imageId,
+    url: value.imageUrl,
+    kind: value.imageKind,
+  }
+
+  const handleHeroChange = (next: MediaPickerValue) =>
+    setValue((prev) => ({
+      ...prev,
+      imageId: next.id,
+      imageUrl: next.url,
+      imageKind: next.kind,
     }))
 
   const handleSubmit = async (event: FormEvent) => {
@@ -133,8 +164,7 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
         name: value.name.trim(),
         summary: value.summary.trim(),
         description: value.description.trim(),
-        image: value.image.trim() || undefined,
-        bgClass: value.bgClass.trim() || undefined,
+        imageId: value.imageId,
         year: value.year.trim(),
         role: value.role.trim(),
         stack: value.stack.map((s) => s.trim()).filter(Boolean),
@@ -142,12 +172,10 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
         responsibilities: value.responsibilities.map((s) => s.trim()).filter(Boolean),
         gallery: value.gallery
           .map((item) => ({
-            alt: item.alt.trim(),
             caption: item.caption.trim(),
-            image: item.image.trim() || undefined,
-            bgClass: item.bgClass.trim() || undefined,
+            imageId: item.imageId,
           }))
-          .filter((item) => item.alt || item.caption || item.image),
+          .filter((item) => item.imageId || item.caption),
       }
 
       const url = mode === 'create' ? '/api/projects' : `/api/projects/${projectId}`
@@ -252,24 +280,14 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
               placeholder="Fullstack Engineer"
             />
           </label>
-          <label className="flex flex-col gap-2">
-            <span className={labelClass}>Image URL / pathname</span>
-            <input
-              className={inputClass}
-              value={value.image}
-              onChange={(e) => updateField('image', e.target.value)}
-              placeholder="project-dashboard.jpeg"
+          <div className="sm:col-span-2">
+            <MediaPicker
+              label="Hero media"
+              value={heroPickerValue}
+              onChange={handleHeroChange}
+              accept="both"
             />
-          </label>
-          <label className="flex flex-col gap-2">
-            <span className={labelClass}>Background class</span>
-            <input
-              className={inputClass}
-              value={value.bgClass}
-              onChange={(e) => updateField('bgClass', e.target.value)}
-              placeholder="from-indigo-900 via-slate-900 to-slate-800"
-            />
-          </label>
+          </div>
         </div>
       </section>
 
@@ -306,7 +324,7 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold tracking-wide text-white/80">Gallery</h3>
           <button type="button" onClick={addGalleryItem} className={ghostBtn}>
-            + Add image
+            + Add media
           </button>
         </div>
 
@@ -321,7 +339,7 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
             >
               <div className="flex items-center justify-between">
                 <p className="text-xs uppercase tracking-[0.18em] text-white/40">
-                  Image #{index + 1}
+                  Media #{index + 1}
                 </p>
                 <button
                   type="button"
@@ -332,26 +350,24 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
                 </button>
               </div>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <label className="flex flex-col gap-2">
-                  <span className={labelClass}>Image URL / pathname</span>
-                  <input
-                    className={inputClass}
-                    value={item.image}
-                    onChange={(e) =>
-                      updateGalleryItem(index, { image: e.target.value })
+                <div className="sm:col-span-2">
+                  <MediaPicker
+                    label="Media"
+                    accept="both"
+                    value={{
+                      id: item.imageId,
+                      url: item.imageUrl,
+                      kind: item.imageKind,
+                    }}
+                    onChange={(next) =>
+                      updateGalleryItem(index, {
+                        imageId: next.id,
+                        imageUrl: next.url,
+                        imageKind: next.kind,
+                      })
                     }
-                    placeholder="project-dashboard-hero.jpeg"
                   />
-                </label>
-                <label className="flex flex-col gap-2">
-                  <span className={labelClass}>Alt text</span>
-                  <input
-                    className={inputClass}
-                    value={item.alt}
-                    onChange={(e) => updateGalleryItem(index, { alt: e.target.value })}
-                    placeholder="Dashboard overview"
-                  />
-                </label>
+                </div>
                 <label className="flex flex-col gap-2 sm:col-span-2">
                   <span className={labelClass}>Caption</span>
                   <input
@@ -361,17 +377,6 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
                       updateGalleryItem(index, { caption: e.target.value })
                     }
                     placeholder="Overview analytics."
-                  />
-                </label>
-                <label className="flex flex-col gap-2 sm:col-span-2">
-                  <span className={labelClass}>Background class</span>
-                  <input
-                    className={inputClass}
-                    value={item.bgClass}
-                    onChange={(e) =>
-                      updateGalleryItem(index, { bgClass: e.target.value })
-                    }
-                    placeholder="from-indigo-900 via-slate-900 to-slate-800"
                   />
                 </label>
               </div>

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { loadDashboardData } from '@/features/dashboard/data/supabase.data'
+import { loadDashboardData } from '@/features/dashboard/data/neon.data'
 
 export const metadata = {
   title: 'Projects · Dashboard',

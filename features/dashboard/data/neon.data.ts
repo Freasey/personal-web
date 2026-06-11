@@ -3,6 +3,7 @@ import 'server-only'
 import type {
   CardItem,
   ContactItem,
+  MediaKind,
   ProfileData,
   ProjectItem,
   SkillItem,
@@ -11,15 +12,11 @@ import {
   createStaticDashboardData,
   type DashboardData,
 } from './dashboard.data'
+import { hasDb, tryGetSql } from '@/lib/db'
 
-type SupabaseRow = Record<string, unknown>
+type Row = Record<string, unknown>
 
-const supabaseUrl = process.env.SUPABASE_URL
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
-
-const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey)
-
-const readString = (row: SupabaseRow, ...keys: string[]) => {
+const readString = (row: Row, ...keys: string[]) => {
   for (const key of keys) {
     const value = row[key]
     if (typeof value === 'string' && value.trim()) {
@@ -30,7 +27,7 @@ const readString = (row: SupabaseRow, ...keys: string[]) => {
   return undefined
 }
 
-const readNumber = (row: SupabaseRow, ...keys: string[]) => {
+const readNumber = (row: Row, ...keys: string[]) => {
   for (const key of keys) {
     const value = row[key]
     if (typeof value === 'number' && Number.isFinite(value)) {
@@ -41,7 +38,7 @@ const readNumber = (row: SupabaseRow, ...keys: string[]) => {
   return undefined
 }
 
-const readBoolean = (row: SupabaseRow, ...keys: string[]) => {
+const readBoolean = (row: Row, ...keys: string[]) => {
   for (const key of keys) {
     const value = row[key]
     if (typeof value === 'boolean') {
@@ -52,90 +49,89 @@ const readBoolean = (row: SupabaseRow, ...keys: string[]) => {
   return undefined
 }
 
-const readImage = (row: SupabaseRow) =>
-  readString(row, 'image_url', 'image', 'url', 'pathname', 'media_url')
+interface AssetEmbed {
+  public_url?: string | null
+  kind?: string | null
+}
 
-const readTheme = (row: SupabaseRow) =>
+const readEmbeddedAsset = (row: Row, key: string): AssetEmbed | null => {
+  const value = row[key]
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  return value as AssetEmbed
+}
+
+const readImage = (row: Row, embedKey = 'image') => {
+  const asset = readEmbeddedAsset(row, embedKey)
+  if (asset?.public_url) return asset.public_url
+  return readString(row, 'image_url', 'image', 'url', 'pathname', 'media_url')
+}
+
+const readImageKind = (row: Row, embedKey = 'image'): MediaKind | null => {
+  const asset = readEmbeddedAsset(row, embedKey)
+  if (asset?.kind === 'image' || asset?.kind === 'video') return asset.kind
+  return null
+}
+
+const readImageId = (row: Row, key = 'image_id') => {
+  const value = row[key]
+  return typeof value === 'string' && value.trim() ? value : null
+}
+
+const readTheme = (row: Row) =>
   readString(row, 'theme_key', 'bg_class', 'color_token', 'style_key')
 
-const isActiveRow = (row: SupabaseRow) => readBoolean(row, 'is_active') !== false
+const isActiveRow = (row: Row) => readBoolean(row, 'is_active') !== false
 
-const sortRows = <T extends SupabaseRow>(rows: T[]) =>
+const sortRows = <T extends Row>(rows: T[]) =>
   [...rows].sort((left, right) => {
     const leftOrder = readNumber(left, 'sort_order') ?? 0
     const rightOrder = readNumber(right, 'sort_order') ?? 0
     return leftOrder - rightOrder
   })
 
-const fetchTable = async <T extends SupabaseRow>(table: string, query = ''): Promise<T[]> => {
-  if (!hasSupabaseConfig || !supabaseUrl || !supabaseAnonKey) {
-    return []
-  }
-
-  const endpoint = new URL(`/rest/v1/${table}`, supabaseUrl)
-  endpoint.searchParams.set('select', '*')
-
-  if (query) {
-    const queryParams = new URLSearchParams(query)
-    for (const [key, value] of queryParams.entries()) {
-      endpoint.searchParams.set(key, value)
-    }
-  }
-
-  const response = await fetch(endpoint.toString(), {
-    headers: {
-      apikey: supabaseAnonKey,
-      Authorization: `Bearer ${supabaseAnonKey}`,
-      Accept: 'application/json'
-    },
-    cache: 'no-store'
-  })
-
-  if (!response.ok) {
-    return []
-  }
-
-  const data = (await response.json()) as T[]
-  return Array.isArray(data) ? data : []
-}
-
-const mapCard = (row: SupabaseRow, fallback?: CardItem): CardItem => ({
+const mapCard = (row: Row, fallback?: CardItem): CardItem => ({
   id: Number(readNumber(row, 'id') ?? fallback?.id ?? 0),
   image: readImage(row) ?? fallback?.image,
+  imageId: readImageId(row),
+  imageKind: readImageKind(row),
   imageAlt: readString(row, 'image_alt', 'alt') ?? fallback?.imageAlt,
   backgroundSvg: readString(row, 'background_svg', 'backgroundSvg') ?? fallback?.backgroundSvg,
   title: readString(row, 'title', 'name') ?? fallback?.title ?? '',
   subtitle: readString(row, 'subtitle') ?? fallback?.subtitle ?? '',
   description: readString(row, 'description', 'summary') ?? fallback?.description ?? '',
-  cta: readString(row, 'cta', 'call_to_action') ?? fallback?.cta,
+  cta: readString(row, 'cta', 'cta_label', 'call_to_action') ?? fallback?.cta,
   href: readString(row, 'href', 'link') ?? fallback?.href,
   bgClass: fallback?.bgClass
 })
 
-const mapSkill = (row: SupabaseRow, fallback?: SkillItem): SkillItem => ({
+const mapSkill = (row: Row, fallback?: SkillItem): SkillItem => ({
   id: readString(row, 'id') ?? fallback?.id ?? '',
   name: readString(row, 'name', 'title') ?? fallback?.name ?? '',
   description: readString(row, 'description', 'summary') ?? fallback?.description ?? '',
   image: readImage(row) ?? fallback?.image,
+  imageId: readImageId(row),
+  imageKind: readImageKind(row),
   bgClass: readTheme(row) ?? fallback?.bgClass
 })
 
-const mapContact = (row: SupabaseRow, fallback?: ContactItem): ContactItem => ({
+const mapContact = (row: Row, fallback?: ContactItem): ContactItem => ({
   id: readString(row, 'id') ?? fallback?.id ?? '',
   label: readString(row, 'label', 'name', 'type') ?? fallback?.label ?? '',
   value: readString(row, 'value', 'content') ?? fallback?.value ?? '',
   hint: readString(row, 'hint', 'description') ?? fallback?.hint ?? ''
 })
 
-const mapProjectGalleryItem = (row: SupabaseRow, fallback?: ProjectItem['gallery'][number]) => ({
+const mapProjectGalleryItem = (row: Row, fallback?: ProjectItem['gallery'][number]) => ({
   id: readString(row, 'id') ?? fallback?.id ?? '',
-  image: readImage(row) ?? fallback?.image,
+  image: readImage(row, 'asset') ?? fallback?.image,
+  imageId: readImageId(row, 'asset_id'),
+  imageKind: readImageKind(row, 'asset'),
   alt: readString(row, 'alt', 'image_alt') ?? fallback?.alt ?? '',
   caption: readString(row, 'caption', 'description') ?? fallback?.caption ?? '',
   bgClass: readTheme(row) ?? fallback?.bgClass
 })
 
-const mapProfile = (row: SupabaseRow, fallback: ProfileData): ProfileData => ({
+const mapProfile = (row: Row, fallback: ProfileData): ProfileData => ({
   name: readString(row, 'name') ?? fallback.name,
   role: readString(row, 'role', 'title') ?? fallback.role,
   location: readString(row, 'location') ?? fallback.location,
@@ -146,35 +142,51 @@ const mapProfile = (row: SupabaseRow, fallback: ProfileData): ProfileData => ({
   experience: fallback.experience
 })
 
-const mapProject = (row: SupabaseRow, fallback?: ProjectItem): ProjectItem => ({
+const mapProject = (row: Row, fallback?: ProjectItem): ProjectItem => ({
   id: readString(row, 'id') ?? fallback?.id ?? '',
   name: readString(row, 'name', 'title') ?? fallback?.name ?? '',
   summary: readString(row, 'summary') ?? fallback?.summary ?? '',
   description: readString(row, 'description') ?? fallback?.description ?? '',
   image: readImage(row) ?? fallback?.image,
+  imageId: readImageId(row),
+  imageKind: readImageKind(row),
   bgClass: readTheme(row) ?? fallback?.bgClass,
   gallery: fallback?.gallery ?? [],
   stack: fallback?.stack ?? [],
   highlights: fallback?.highlights ?? [],
   responsibilities: fallback?.responsibilities ?? [],
-  year: readString(row, 'year') ?? fallback?.year ?? '',
+  year: readString(row, 'year') ?? readNumber(row, 'year')?.toString() ?? fallback?.year ?? '',
   role: readString(row, 'role', 'position') ?? fallback?.role ?? ''
 })
 
-export const loadDashboardData = async (blobUrl: Record<string, string> | null): Promise<DashboardData> => {
+// Note: the `json_build_object(...)` expressions below are static SQL (no user
+// input) that mirror PostgREST's embedded asset object (`{public_url, kind}`),
+// so they live inline in the template literal — only real values use `${}`.
+
+export const loadDashboardData = async (
+  blobUrl: Record<string, string> | null,
+): Promise<DashboardData> => {
   const staticData = createStaticDashboardData(blobUrl)
 
-  if (!hasSupabaseConfig) {
+  if (!hasDb) {
+    return staticData
+  }
+
+  const sql = tryGetSql()
+  if (!sql) {
     return staticData
   }
 
   try {
     const [profiles, cards, contacts, projects, skills] = await Promise.all([
-      fetchTable<SupabaseRow>('profiles'),
-      fetchTable<SupabaseRow>('dashboard_cards'),
-      fetchTable<SupabaseRow>('contacts'),
-      fetchTable<SupabaseRow>('projects'),
-      fetchTable<SupabaseRow>('skill_items')
+      sql`select * from profiles` as Promise<Row[]>,
+      sql`select c.*, case when a.id is not null then json_build_object('public_url', a.public_url, 'kind', a.kind) end as image
+            from dashboard_cards c left join assets a on a.id = c.image_id` as Promise<Row[]>,
+      sql`select * from contacts` as Promise<Row[]>,
+      sql`select p.*, case when a.id is not null then json_build_object('public_url', a.public_url, 'kind', a.kind) end as image
+            from projects p left join assets a on a.id = p.image_id` as Promise<Row[]>,
+      sql`select s.*, case when a.id is not null then json_build_object('public_url', a.public_url, 'kind', a.kind) end as image
+            from skill_items s left join assets a on a.id = s.image_id` as Promise<Row[]>,
     ])
 
     const activeProfileRows = sortRows(profiles.filter(isActiveRow))
@@ -188,9 +200,9 @@ export const loadDashboardData = async (blobUrl: Record<string, string> | null):
 
     const [profileHighlights, profileSkills, profileExperiences] = profileId
       ? await Promise.all([
-          fetchTable<SupabaseRow>('profile_highlights', `profile_id=eq.${profileId}`),
-          fetchTable<SupabaseRow>('profile_skills', `profile_id=eq.${profileId}`),
-          fetchTable<SupabaseRow>('profile_experiences', `profile_id=eq.${profileId}`)
+          sql`select * from profile_highlights where profile_id = ${profileId}` as Promise<Row[]>,
+          sql`select * from profile_skills where profile_id = ${profileId}` as Promise<Row[]>,
+          sql`select * from profile_experiences where profile_id = ${profileId}` as Promise<Row[]>,
         ])
       : [[], [], []]
 
@@ -230,20 +242,22 @@ export const loadDashboardData = async (blobUrl: Record<string, string> | null):
       ? await Promise.all(
           remoteProjects.map(async (project, index) => {
             const fallback = staticData.projects[index]
-            const projectId = readString(project, 'id')
+            const pid = readString(project, 'id')
 
-            const [galleryRows, stackRows, highlightRows, responsibilityRows] = projectId
+            const [galleryRows, stackRows, highlightRows, responsibilityRows] = pid
               ? await Promise.all([
-                  fetchTable<SupabaseRow>('project_gallery', `project_id=eq.${projectId}`),
-                  fetchTable<SupabaseRow>('project_stacks', `project_id=eq.${projectId}`),
-                  fetchTable<SupabaseRow>('project_highlights', `project_id=eq.${projectId}`),
-                  fetchTable<SupabaseRow>('project_responsibilities', `project_id=eq.${projectId}`)
+                  sql`select g.*, case when a.id is not null then json_build_object('public_url', a.public_url, 'kind', a.kind) end as asset
+                        from project_gallery g left join assets a on a.id = g.asset_id
+                        where g.project_id = ${pid}` as Promise<Row[]>,
+                  sql`select * from project_stacks where project_id = ${pid}` as Promise<Row[]>,
+                  sql`select * from project_highlights where project_id = ${pid}` as Promise<Row[]>,
+                  sql`select * from project_responsibilities where project_id = ${pid}` as Promise<Row[]>,
                 ])
               : [[], [], [], []]
 
             const gallery = sortRows(galleryRows).map((row, galleryIndex) => mapProjectGalleryItem(row, fallback?.gallery[galleryIndex]))
             const stack = sortRows(stackRows)
-              .map((row) => readString(row, 'stack', 'name', 'value') ?? '')
+              .map((row) => readString(row, 'stack_name', 'stack', 'name', 'value') ?? '')
               .filter(Boolean)
             const highlights = sortRows(highlightRows)
               .map((row) => readString(row, 'highlight', 'content', 'text') ?? '')

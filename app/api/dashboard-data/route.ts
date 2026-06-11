@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { loadDashboardData } from '@/features/dashboard/data/supabase.data'
+import { loadDashboardData } from '@/features/dashboard/data/neon.data'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

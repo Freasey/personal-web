@@ -3,9 +3,13 @@ export interface BlobResult {
   pathname: string
 }
 
+export type MediaKind = 'image' | 'video'
+
 export interface CardItem {
   id: number
   image?: string
+  imageId?: string | null
+  imageKind?: MediaKind | null
   imageAlt?: string
   backgroundSvg?: string
   title: string
@@ -44,6 +48,8 @@ export interface ContactItem {
 export interface ProjectGalleryItem {
   id: string
   image?: string
+  imageId?: string | null
+  imageKind?: MediaKind | null
   alt: string
   caption: string
   bgClass?: string
@@ -55,6 +61,8 @@ export interface ProjectItem {
   summary: string
   description: string
   image?: string
+  imageId?: string | null
+  imageKind?: MediaKind | null
   bgClass?: string
   gallery: ProjectGalleryItem[]
   stack: string[]
@@ -69,5 +77,7 @@ export interface SkillItem {
   name: string
   description: string
   image?: string
+  imageId?: string | null
+  imageKind?: MediaKind | null
   bgClass?: string
 }
