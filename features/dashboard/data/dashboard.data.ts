@@ -13,7 +13,6 @@ import type {
   SkillItem,
 } from '../types'
 import { getCards } from './cards.data'
-import { getProjectCategories } from './categories.data'
 import { getContactItems } from './contacts.data'
 import { getProfileData } from './profile.data'
 import { getProjectsData } from './projects.data'
@@ -45,7 +44,9 @@ export const createStaticDashboardData = (
   cards: getCards(blobUrl),
   profile: getProfileData(),
   projects: getProjectsData(blobUrl),
-  categories: getProjectCategories(),
+  // No static fallback: categories must come from the DB so their ids are real
+  // UUIDs (a static id like "cat-web" can't satisfy projects.category_id).
+  categories: [],
   skills: getSkillsGallery(blobUrl),
   contacts: getContactItems(),
 })

@@ -13,6 +13,16 @@ const asNullableString = (value: unknown): string | null => {
   return trimmed.length > 0 ? trimmed : null
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// category_id is a uuid FK column. Accept only real UUIDs; anything else
+// (e.g. a static-fallback id like "cat-web") collapses to null so the insert
+// never throws "invalid input syntax for type uuid".
+const asNullableUuid = (value: unknown): string | null => {
+  const str = asNullableString(value)
+  return str && UUID_RE.test(str) ? str : null
+}
+
 const asNullableNumber = (value: unknown): number | null => {
   if (typeof value === 'number' && Number.isFinite(value)) return value
   if (typeof value === 'string') {
@@ -82,7 +92,7 @@ export const parseProjectInput = (body: unknown): ProjectInput | null => {
     summary: asLocalized(raw.summary),
     description: asLocalized(raw.description),
     imageId: asNullableString(raw.imageId),
-    categoryId: asNullableString(raw.categoryId),
+    categoryId: asNullableUuid(raw.categoryId),
     year: asNullableNumber(raw.year),
     role: asLocalized(raw.role),
     stack: asStringArray(raw.stack),
