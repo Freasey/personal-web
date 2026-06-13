@@ -20,14 +20,69 @@ export interface TranslateProvider {
 
 export class TranslateConfigError extends Error {}
 
+// English terms that Indonesian tech professionals normally keep in English.
+// Translating these into formal Indonesian (e.g. "engineer" -> "insinyur")
+// reads awkwardly, so the model is told to leave them as-is for en -> id.
+const KEEP_IN_ENGLISH = [
+  'engineer',
+  'software engineer',
+  'frontend / backend / fullstack engineer',
+  'developer',
+  'designer',
+  'product manager',
+  'frontend',
+  'backend',
+  'fullstack',
+  'framework',
+  'library',
+  'database',
+  'dashboard',
+  'deploy / deployment',
+  'query',
+  'endpoint',
+  'request / response',
+  'cache / caching',
+  'rate limit',
+  'role-based access',
+  'authentication / authorization',
+  'middleware',
+  'API',
+  'UI / UX',
+  'design system',
+  'component',
+  'stack',
+  'performance',
+  'scalable / scalability',
+]
+
+const commonRules = [
+  '- Keep technology names, product names, brand names, company names, and code identifiers exactly as written (e.g. "Next.js", "REST API", "PostgreSQL", "WebSocket").',
+  '- Preserve meaning, numbers, punctuation, and casing of preserved terms.',
+  '- Do NOT add, remove, merge, reorder, or explain items.',
+  '- Return ONLY a JSON array of strings with exactly the same length and order. No prose, no markdown, no code fences.',
+]
+
+const enToIdRules = [
+  '',
+  'Style for Indonesian (write the way a working Indonesian software engineer actually writes — a natural mix of Indonesian with common English tech terms):',
+  '- Keep these common industry terms in ENGLISH; do NOT translate them into formal Indonesian:',
+  `  ${KEEP_IN_ENGLISH.join(', ')}.`,
+  '- Job titles and roles stay in English (e.g. "Fullstack Engineer" stays "Fullstack Engineer", NOT "Insinyur").',
+  '- Avoid archaic or rarely-used literal translations such as "insinyur" (engineer), "peladen" (server), "tetikus" (mouse), "gawai" (device), "perambah" (browser), "galat" (error). Prefer the common English word or the widely-used loanword.',
+  '- Use natural, professional but not stiff Indonesian. It is fine to leave a technical noun in English when that is what people say in practice.',
+]
+
+const idToEnRules = [
+  '',
+  'Style for English: use clear, professional, idiomatic English. Translate Indonesian fully into natural English.',
+]
+
 const buildPrompt = (texts: string[], from: TranslateLocale, to: TranslateLocale) =>
   [
     `Translate each item in the following JSON array from ${LOCALE_NAMES[from]} to ${LOCALE_NAMES[to]}.`,
     'Rules:',
-    '- Keep technology names, product names, brand names, company names, and code identifiers untranslated (e.g. "Next.js", "REST API", "PostgreSQL", "WebSocket").',
-    '- Preserve meaning and a natural, professional tone.',
-    '- Do NOT add, remove, merge, or reorder items.',
-    '- Return ONLY a JSON array of strings with exactly the same length and order. No prose, no markdown.',
+    ...commonRules,
+    ...(to === 'id' ? enToIdRules : idToEnRules),
     '',
     'Input:',
     JSON.stringify(texts),
