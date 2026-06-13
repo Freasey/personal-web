@@ -1,19 +1,33 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useBlobs } from '../hooks/useBlobs'
-import { getStaticDashboardData, type DashboardData } from '../data/dashboard.data'
+import { getStaticDashboardData, type RawDashboardData } from '../data/dashboard.data'
+import { localizeDashboardData } from '../localize'
+import { getInitialLocale, persistLocale, type Locale } from '../i18n'
 import { BioView, CardsView, ContactView, ProjectsView, SkillsView } from './views'
+import { LanguageToggle } from './LanguageToggle'
 
 type DashboardView = 'cards' | 'bio' | 'projects' | 'skills' | 'contact'
 
 export const Dashboard = () => {
   const [view, setView] = useState<DashboardView>('cards')
   const { blobUrl } = useBlobs()
-  const [dashboardData, setDashboardData] = useState(() => getStaticDashboardData(blobUrl))
+  const [rawData, setRawData] = useState<RawDashboardData>(() => getStaticDashboardData(blobUrl))
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
+  const [locale, setLocale] = useState<Locale>('en')
+
+  // Resolve the stored/browser locale once mounted (avoids SSR/client mismatch).
+  useEffect(() => {
+    setLocale(getInitialLocale())
+  }, [])
+
+  const handleLocaleChange = (next: Locale) => {
+    setLocale(next)
+    persistLocale(next)
+  }
 
   useEffect(() => {
-    setDashboardData(getStaticDashboardData(blobUrl))
+    setRawData(getStaticDashboardData(blobUrl))
   }, [blobUrl])
 
   useEffect(() => {
@@ -29,10 +43,10 @@ export const Dashboard = () => {
 
         if (!response.ok) return
 
-        const nextData = (await response.json()) as DashboardData
+        const nextData = (await response.json()) as RawDashboardData
 
         if (!isCancelled) {
-          setDashboardData(nextData)
+          setRawData(nextData)
         }
       } catch {
         // keep static fallback
@@ -45,6 +59,13 @@ export const Dashboard = () => {
       isCancelled = true
     }
   }, [blobUrl])
+
+  // Collapse the raw bilingual data to the active locale. Toggling is instant
+  // (no refetch) because both languages are already in memory.
+  const dashboardData = useMemo(
+    () => localizeDashboardData(rawData, locale),
+    [rawData, locale],
+  )
 
   const { cards, profile, projects, skills, contacts } = dashboardData
   useEffect(() => {
@@ -73,29 +94,35 @@ export const Dashboard = () => {
       : `${baseContainer} h-auto lg:h-[585px] overflow-y-auto lg:overflow-visible`
 
   return (
-    <div className={containerClass}>
-      {view === 'bio' ? (
-        <BioView profile={profile} onBack={() => setView('cards')} />
-      ) : view === 'projects' ? (
-        <ProjectsView
-          projects={projects}
-          selectedProjectId={selectedProjectId}
-          onSelectProject={setSelectedProjectId}
-          onBack={() => setView('cards')}
-        />
-      ) : view === 'skills' ? (
-        <SkillsView skills={skills} onBack={() => setView('cards')} />
-      ) : view === 'contact' ? (
-        <ContactView contacts={contacts} onBack={() => setView('cards')} />
-      ) : (
-        <CardsView
-          cards={cards}
-          onBio={() => setView('bio')}
-          onProjects={() => setView('projects')}
-          onSkills={() => setView('skills')}
-          onContact={() => setView('contact')}
-        />
-      )}
+    <div className="w-full max-w-[1200px] flex flex-col gap-3">
+      <div className="flex justify-end">
+        <LanguageToggle locale={locale} onChange={handleLocaleChange} />
+      </div>
+      <div className={containerClass}>
+        {view === 'bio' ? (
+          <BioView profile={profile} locale={locale} onBack={() => setView('cards')} />
+        ) : view === 'projects' ? (
+          <ProjectsView
+            projects={projects}
+            locale={locale}
+            selectedProjectId={selectedProjectId}
+            onSelectProject={setSelectedProjectId}
+            onBack={() => setView('cards')}
+          />
+        ) : view === 'skills' ? (
+          <SkillsView skills={skills} locale={locale} onBack={() => setView('cards')} />
+        ) : view === 'contact' ? (
+          <ContactView contacts={contacts} locale={locale} onBack={() => setView('cards')} />
+        ) : (
+          <CardsView
+            cards={cards}
+            onBio={() => setView('bio')}
+            onProjects={() => setView('projects')}
+            onSkills={() => setView('skills')}
+            onContact={() => setView('contact')}
+          />
+        )}
+      </div>
     </div>
   )
 }

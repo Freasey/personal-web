@@ -3,26 +3,39 @@ import 'server-only'
 import { randomUUID } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { getSql } from '@/lib/db'
+import type { LocalizedText } from '../i18n'
 
 export interface ProjectGalleryInput {
   imageId?: string | null
-  caption: string
+  caption: LocalizedText
 }
 
 export interface ProjectInput {
   name: string
   slug?: string | null
-  summary: string
-  description: string
+  summary: LocalizedText
+  description: LocalizedText
   imageId?: string | null
   year?: number | null
-  role: string
+  role: LocalizedText
   stack: string[]
-  highlights: string[]
-  responsibilities: string[]
+  highlights: LocalizedText[]
+  responsibilities: LocalizedText[]
   gallery: ProjectGalleryInput[]
   sort_order?: number
   is_active?: boolean
+}
+
+/** Serialize a bilingual value for a jsonb column, or null when empty. */
+const toJsonb = (value: LocalizedText | null | undefined): string | null => {
+  if (!value) return null
+  const en = value.en?.trim()
+  const id = value.id?.trim()
+  if (!en && !id) return null
+  const out: LocalizedText = {}
+  if (en) out.en = en
+  if (id) out.id = id
+  return JSON.stringify(out)
 }
 
 export interface ProjectRawRow {
@@ -59,7 +72,7 @@ const childInsertQueries = (
   input.gallery.forEach((item, index) => {
     queries.push(sql`
       insert into project_gallery (project_id, asset_id, caption, sort_order, is_active)
-      values (${projectId}, ${item.imageId ?? null}, ${item.caption}, ${index}, true)`)
+      values (${projectId}, ${item.imageId ?? null}, ${toJsonb(item.caption)}::jsonb, ${index}, true)`)
   })
   input.stack.forEach((value, index) => {
     queries.push(sql`
@@ -69,12 +82,12 @@ const childInsertQueries = (
   input.highlights.forEach((value, index) => {
     queries.push(sql`
       insert into project_highlights (project_id, content, sort_order, is_active)
-      values (${projectId}, ${value}, ${index}, true)`)
+      values (${projectId}, ${toJsonb(value)}::jsonb, ${index}, true)`)
   })
   input.responsibilities.forEach((value, index) => {
     queries.push(sql`
       insert into project_responsibilities (project_id, content, sort_order, is_active)
-      values (${projectId}, ${value}, ${index}, true)`)
+      values (${projectId}, ${toJsonb(value)}::jsonb, ${index}, true)`)
   })
 
   return queries
@@ -97,9 +110,9 @@ export const createProject = async (input: ProjectInput): Promise<string> => {
   await sql.transaction([
     sql`
       insert into projects (id, name, slug, summary, description, image_id, year, role, sort_order, is_active)
-      values (${id}, ${input.name}, ${input.slug ?? null}, ${input.summary || null},
-              ${input.description || null}, ${input.imageId ?? null}, ${input.year ?? null},
-              ${input.role || null}, ${input.sort_order ?? 0}, ${input.is_active ?? true})`,
+      values (${id}, ${input.name}, ${input.slug ?? null}, ${toJsonb(input.summary)}::jsonb,
+              ${toJsonb(input.description)}::jsonb, ${input.imageId ?? null}, ${input.year ?? null},
+              ${toJsonb(input.role)}::jsonb, ${input.sort_order ?? 0}, ${input.is_active ?? true})`,
     ...childInsertQueries(sql, id, input),
   ])
 
@@ -115,11 +128,11 @@ export const updateProject = async (id: string, input: ProjectInput) => {
       update projects set
         name = ${input.name},
         slug = ${input.slug ?? null},
-        summary = ${input.summary || null},
-        description = ${input.description || null},
+        summary = ${toJsonb(input.summary)}::jsonb,
+        description = ${toJsonb(input.description)}::jsonb,
         image_id = ${input.imageId ?? null},
         year = ${input.year ?? null},
-        role = ${input.role || null},
+        role = ${toJsonb(input.role)}::jsonb,
         sort_order = ${input.sort_order ?? 0},
         is_active = ${input.is_active ?? true},
         updated_at = now()

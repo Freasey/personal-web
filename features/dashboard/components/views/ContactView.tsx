@@ -1,12 +1,15 @@
 import type { ContactItem } from '../../types'
+import { UI, type Locale } from '../../i18n'
 import { FadeSection } from '../ui/FadeSection'
 
 interface ContactViewProps {
   contacts: ContactItem[]
+  locale: Locale
   onBack: () => void
 }
 
-export const ContactView = ({ contacts, onBack }: ContactViewProps) => {
+export const ContactView = ({ contacts, locale, onBack }: ContactViewProps) => {
+  const t = UI[locale]
   return (
     <FadeSection className="w-full flex flex-col rounded-2xl overflow-hidden border border-white/10">
 
@@ -20,14 +23,14 @@ export const ContactView = ({ contacts, onBack }: ContactViewProps) => {
         <div className="relative z-10 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="mb-3 sm:mb-4 text-[10px] uppercase tracking-[0.35em] sm:tracking-[0.45em] text-white/35">
-              Contact
+              {t.contact}
             </p>
             <h2 className="text-[1.75rem] sm:text-[2.2rem] lg:text-[2.6rem] font-black leading-[1.05]">
-              Let's Build
+              {t.contactHeadline1}
               <br />
-              <span className="text-white/30">Something</span>
+              <span className="text-white/30">{t.contactHeadline2}</span>
               <br />
-              Great.
+              {t.contactHeadline3}
             </h2>
           </div>
 
@@ -36,7 +39,7 @@ export const ContactView = ({ contacts, onBack }: ContactViewProps) => {
             onClick={onBack}
             className="shrink-0 mt-1 rounded-full border border-white/15 px-3 py-1.5 sm:px-4 sm:py-2 text-xs text-white/45 transition-all duration-200 hover:border-white/30 hover:text-white cursor-pointer"
           >
-            Back to menu
+            {t.backToMenu}
           </button>
         </div>
 
@@ -48,9 +51,8 @@ export const ContactView = ({ contacts, onBack }: ContactViewProps) => {
       <div className="flex items-center gap-4 sm:gap-5 border-b border-white/7 bg-white/2 px-5 sm:px-8 py-4 sm:py-5">
         <div className="h-9 sm:h-10 w-[3px] shrink-0 rounded-full bg-linear-to-b from-white/50 to-white/05" />
         <p className="text-xs sm:text-sm leading-relaxed text-white/60">
-          Open to freelance projects, product collaborations, and full-time roles.
-          Have an idea that needs design-to-code execution?{' '}
-          <span className="text-white/90">Let's make it real.</span>
+          {t.contactIntro}{' '}
+          <span className="text-white/90">{t.contactIntroEmphasis}</span>
         </p>
       </div>
 

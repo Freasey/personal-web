@@ -1,3 +1,4 @@
+import type { LocalizedText } from '../i18n'
 import type {
   ProjectGalleryInput,
   ProjectInput,
@@ -5,12 +6,6 @@ import type {
 
 const asString = (value: unknown): string =>
   typeof value === 'string' ? value.trim() : ''
-
-const asOptionalString = (value: unknown): string | undefined => {
-  if (typeof value !== 'string') return undefined
-  const trimmed = value.trim()
-  return trimmed.length > 0 ? trimmed : undefined
-}
 
 const asNullableString = (value: unknown): string | null => {
   if (typeof value !== 'string') return null
@@ -29,6 +24,29 @@ const asNullableNumber = (value: unknown): number | null => {
   return null
 }
 
+/** Accept a bilingual { en, id } object or a plain string (treated as English). */
+const asLocalized = (value: unknown): LocalizedText => {
+  if (typeof value === 'string') {
+    const en = value.trim()
+    return en ? { en } : {}
+  }
+  if (value && typeof value === 'object') {
+    const obj = value as Record<string, unknown>
+    const en = asString(obj.en)
+    const id = asString(obj.id)
+    const out: LocalizedText = {}
+    if (en) out.en = en
+    if (id) out.id = id
+    return out
+  }
+  return {}
+}
+
+const hasContent = (value: LocalizedText): boolean => Boolean(value.en || value.id)
+
+const asLocalizedArray = (value: unknown): LocalizedText[] =>
+  Array.isArray(value) ? value.map(asLocalized).filter(hasContent) : []
+
 const asStringArray = (value: unknown): string[] =>
   Array.isArray(value)
     ? value.map(asString).filter((item) => item.length > 0)
@@ -40,9 +58,9 @@ const asGalleryArray = (value: unknown): ProjectGalleryInput[] => {
   for (const raw of value) {
     if (!raw || typeof raw !== 'object') continue
     const item = raw as Record<string, unknown>
-    const caption = asString(item.caption)
+    const caption = asLocalized(item.caption)
     const imageId = asNullableString(item.imageId)
-    if (!caption && !imageId) continue
+    if (!hasContent(caption) && !imageId) continue
     result.push({
       caption,
       imageId,
@@ -61,19 +79,17 @@ export const parseProjectInput = (body: unknown): ProjectInput | null => {
   return {
     name,
     slug: asNullableString(raw.slug),
-    summary: asString(raw.summary),
-    description: asString(raw.description),
+    summary: asLocalized(raw.summary),
+    description: asLocalized(raw.description),
     imageId: asNullableString(raw.imageId),
     year: asNullableNumber(raw.year),
-    role: asString(raw.role),
+    role: asLocalized(raw.role),
     stack: asStringArray(raw.stack),
-    highlights: asStringArray(raw.highlights),
-    responsibilities: asStringArray(raw.responsibilities),
+    highlights: asLocalizedArray(raw.highlights),
+    responsibilities: asLocalizedArray(raw.responsibilities),
     gallery: asGalleryArray(raw.gallery),
   }
 }
 
 // Re-export to satisfy unused import linting in callers if needed.
 export type { ProjectInput, ProjectGalleryInput }
-// asOptionalString is kept for future fields that should be omitted vs cleared.
-void asOptionalString

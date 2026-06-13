@@ -1,16 +1,18 @@
 import 'server-only'
 
 import type {
-  CardItem,
-  ContactItem,
   MediaKind,
-  ProfileData,
-  ProjectItem,
-  SkillItem,
+  RawCardItem,
+  RawContactItem,
+  RawProfileData,
+  RawProjectItem,
+  RawSkillItem,
 } from '../types'
+import type { LocalizedText } from '../i18n'
+import { hasLocalizedContent } from '../i18n'
 import {
   createStaticDashboardData,
-  type DashboardData,
+  type RawDashboardData,
 } from './dashboard.data'
 import { hasDb, tryGetSql } from '@/lib/db'
 
@@ -21,6 +23,49 @@ const readString = (row: Row, ...keys: string[]) => {
     const value = row[key]
     if (typeof value === 'string' && value.trim()) {
       return value
+    }
+  }
+
+  return undefined
+}
+
+/**
+ * Read a translatable field as bilingual text. Columns are jsonb ({ en, id }),
+ * but legacy/plain-string values (and JSON strings) are tolerated and wrapped
+ * as { en }. Returns undefined when no key holds content.
+ */
+const fromObject = (value: object): LocalizedText | undefined => {
+  const obj = value as Record<string, unknown>
+  const en = typeof obj.en === 'string' && obj.en.trim() ? obj.en : undefined
+  const id = typeof obj.id === 'string' && obj.id.trim() ? obj.id : undefined
+  return en || id ? { en, id } : undefined
+}
+
+const readLocalized = (row: Row, ...keys: string[]): LocalizedText | undefined => {
+  for (const key of keys) {
+    const value = row[key]
+    if (value == null) continue
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim()
+      if (!trimmed) continue
+      if (trimmed.startsWith('{')) {
+        try {
+          const parsed: unknown = JSON.parse(trimmed)
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            const result = fromObject(parsed)
+            if (result) return result
+          }
+        } catch {
+          // not JSON after all — fall through to plain string
+        }
+      }
+      return { en: trimmed }
+    }
+
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      const result = fromObject(value)
+      if (result) return result
     }
   }
 
@@ -89,64 +134,69 @@ const sortRows = <T extends Row>(rows: T[]) =>
     return leftOrder - rightOrder
   })
 
-const mapCard = (row: Row, fallback?: CardItem): CardItem => ({
+const emptyText: LocalizedText = { en: '' }
+
+const mapCard = (row: Row, fallback?: RawCardItem): RawCardItem => ({
   id: Number(readNumber(row, 'id') ?? fallback?.id ?? 0),
   image: readImage(row) ?? fallback?.image,
   imageId: readImageId(row),
   imageKind: readImageKind(row),
-  imageAlt: readString(row, 'image_alt', 'alt') ?? fallback?.imageAlt,
+  imageAlt: readLocalized(row, 'image_alt', 'alt') ?? fallback?.imageAlt,
   backgroundSvg: readString(row, 'background_svg', 'backgroundSvg') ?? fallback?.backgroundSvg,
-  title: readString(row, 'title', 'name') ?? fallback?.title ?? '',
-  subtitle: readString(row, 'subtitle') ?? fallback?.subtitle ?? '',
-  description: readString(row, 'description', 'summary') ?? fallback?.description ?? '',
-  cta: readString(row, 'cta', 'cta_label', 'call_to_action') ?? fallback?.cta,
+  title: readLocalized(row, 'title', 'name') ?? fallback?.title ?? emptyText,
+  subtitle: readLocalized(row, 'subtitle') ?? fallback?.subtitle ?? emptyText,
+  description: readLocalized(row, 'description', 'summary') ?? fallback?.description ?? emptyText,
+  cta: readLocalized(row, 'cta', 'cta_label', 'call_to_action') ?? fallback?.cta,
   href: readString(row, 'href', 'link') ?? fallback?.href,
-  bgClass: fallback?.bgClass
+  bgClass: fallback?.bgClass,
 })
 
-const mapSkill = (row: Row, fallback?: SkillItem): SkillItem => ({
+const mapSkill = (row: Row, fallback?: RawSkillItem): RawSkillItem => ({
   id: readString(row, 'id') ?? fallback?.id ?? '',
-  name: readString(row, 'name', 'title') ?? fallback?.name ?? '',
-  description: readString(row, 'description', 'summary') ?? fallback?.description ?? '',
+  name: readLocalized(row, 'name', 'title') ?? fallback?.name ?? emptyText,
+  description: readLocalized(row, 'description', 'summary') ?? fallback?.description ?? emptyText,
   image: readImage(row) ?? fallback?.image,
   imageId: readImageId(row),
   imageKind: readImageKind(row),
-  bgClass: readTheme(row) ?? fallback?.bgClass
+  bgClass: readTheme(row) ?? fallback?.bgClass,
 })
 
-const mapContact = (row: Row, fallback?: ContactItem): ContactItem => ({
+const mapContact = (row: Row, fallback?: RawContactItem): RawContactItem => ({
   id: readString(row, 'id') ?? fallback?.id ?? '',
-  label: readString(row, 'label', 'name', 'type') ?? fallback?.label ?? '',
+  label: readLocalized(row, 'label', 'name', 'type') ?? fallback?.label ?? emptyText,
   value: readString(row, 'value', 'content') ?? fallback?.value ?? '',
-  hint: readString(row, 'hint', 'description') ?? fallback?.hint ?? ''
+  hint: readLocalized(row, 'hint', 'description') ?? fallback?.hint ?? emptyText,
 })
 
-const mapProjectGalleryItem = (row: Row, fallback?: ProjectItem['gallery'][number]) => ({
+const mapProjectGalleryItem = (
+  row: Row,
+  fallback?: RawProjectItem['gallery'][number],
+): RawProjectItem['gallery'][number] => ({
   id: readString(row, 'id') ?? fallback?.id ?? '',
   image: readImage(row, 'asset') ?? fallback?.image,
   imageId: readImageId(row, 'asset_id'),
   imageKind: readImageKind(row, 'asset'),
-  alt: readString(row, 'alt', 'image_alt') ?? fallback?.alt ?? '',
-  caption: readString(row, 'caption', 'description') ?? fallback?.caption ?? '',
-  bgClass: readTheme(row) ?? fallback?.bgClass
+  alt: readLocalized(row, 'alt', 'image_alt') ?? fallback?.alt ?? emptyText,
+  caption: readLocalized(row, 'caption', 'description') ?? fallback?.caption ?? emptyText,
+  bgClass: readTheme(row) ?? fallback?.bgClass,
 })
 
-const mapProfile = (row: Row, fallback: ProfileData): ProfileData => ({
+const mapProfile = (row: Row, fallback: RawProfileData): RawProfileData => ({
   name: readString(row, 'name') ?? fallback.name,
-  role: readString(row, 'role', 'title') ?? fallback.role,
-  location: readString(row, 'location') ?? fallback.location,
-  summary: readString(row, 'summary', 'bio') ?? fallback.summary,
-  availability: readString(row, 'availability') ?? fallback.availability,
+  role: readLocalized(row, 'role', 'title') ?? fallback.role,
+  location: readLocalized(row, 'location') ?? fallback.location,
+  summary: readLocalized(row, 'summary', 'bio') ?? fallback.summary,
+  availability: readLocalized(row, 'availability') ?? fallback.availability,
   highlights: fallback.highlights,
   skills: fallback.skills,
-  experience: fallback.experience
+  experience: fallback.experience,
 })
 
-const mapProject = (row: Row, fallback?: ProjectItem): ProjectItem => ({
+const mapProject = (row: Row, fallback?: RawProjectItem): RawProjectItem => ({
   id: readString(row, 'id') ?? fallback?.id ?? '',
   name: readString(row, 'name', 'title') ?? fallback?.name ?? '',
-  summary: readString(row, 'summary') ?? fallback?.summary ?? '',
-  description: readString(row, 'description') ?? fallback?.description ?? '',
+  summary: readLocalized(row, 'summary') ?? fallback?.summary ?? emptyText,
+  description: readLocalized(row, 'description') ?? fallback?.description ?? emptyText,
   image: readImage(row) ?? fallback?.image,
   imageId: readImageId(row),
   imageKind: readImageKind(row),
@@ -156,7 +206,7 @@ const mapProject = (row: Row, fallback?: ProjectItem): ProjectItem => ({
   highlights: fallback?.highlights ?? [],
   responsibilities: fallback?.responsibilities ?? [],
   year: readString(row, 'year') ?? readNumber(row, 'year')?.toString() ?? fallback?.year ?? '',
-  role: readString(row, 'role', 'position') ?? fallback?.role ?? ''
+  role: readLocalized(row, 'role', 'position') ?? fallback?.role ?? emptyText,
 })
 
 // Note: the `json_build_object(...)` expressions below are static SQL (no user
@@ -165,7 +215,7 @@ const mapProject = (row: Row, fallback?: ProjectItem): ProjectItem => ({
 
 export const loadDashboardData = async (
   blobUrl: Record<string, string> | null,
-): Promise<DashboardData> => {
+): Promise<RawDashboardData> => {
   const staticData = createStaticDashboardData(blobUrl)
 
   if (!hasDb) {
@@ -216,24 +266,24 @@ export const loadDashboardData = async (
           const baseProfile = mapProfile(remoteProfile, fallback)
 
           const highlights = sortRows(profileHighlights)
-            .map((row, index) => readString(row, 'highlight', 'content', 'text') ?? fallback.highlights[index] ?? '')
-            .filter(Boolean)
+            .map((row, index) => readLocalized(row, 'highlight', 'content', 'text') ?? fallback.highlights[index])
+            .filter((item): item is LocalizedText => hasLocalizedContent(item))
 
           const skillsList = sortRows(profileSkills)
             .map((row, index) => readString(row, 'skill', 'name', 'value') ?? fallback.skills[index] ?? '')
             .filter(Boolean)
           const experienceList = sortRows(profileExperiences).map((row, index) => ({
-            role: readString(row, 'role', 'title') ?? fallback.experience[index]?.role ?? '',
+            role: readLocalized(row, 'role', 'title') ?? fallback.experience[index]?.role ?? emptyText,
             company: readString(row, 'company') ?? fallback.experience[index]?.company ?? '',
             period: readString(row, 'period', 'duration') ?? fallback.experience[index]?.period ?? '',
-            details: readString(row, 'details', 'description') ?? fallback.experience[index]?.details ?? ''
+            details: readLocalized(row, 'details', 'description') ?? fallback.experience[index]?.details ?? emptyText,
           }))
 
           return {
             ...baseProfile,
             highlights: highlights.length > 0 ? highlights : fallback.highlights,
             skills: skillsList.length > 0 ? skillsList : fallback.skills,
-            experience: experienceList.length > 0 ? experienceList : fallback.experience
+            experience: experienceList.length > 0 ? experienceList : fallback.experience,
           }
         })()
       : staticData.profile
@@ -260,18 +310,18 @@ export const loadDashboardData = async (
               .map((row) => readString(row, 'stack_name', 'stack', 'name', 'value') ?? '')
               .filter(Boolean)
             const highlights = sortRows(highlightRows)
-              .map((row) => readString(row, 'highlight', 'content', 'text') ?? '')
-              .filter(Boolean)
+              .map((row) => readLocalized(row, 'highlight', 'content', 'text'))
+              .filter((item): item is LocalizedText => hasLocalizedContent(item))
             const responsibilities = sortRows(responsibilityRows)
-              .map((row) => readString(row, 'responsibility', 'content', 'text', 'description') ?? '')
-              .filter(Boolean)
+              .map((row) => readLocalized(row, 'responsibility', 'content', 'text', 'description'))
+              .filter((item): item is LocalizedText => hasLocalizedContent(item))
 
             return {
               ...mapProject(project, fallback),
               gallery: gallery.length > 0 ? gallery : fallback?.gallery ?? [],
               stack: stack.length > 0 ? stack : fallback?.stack ?? [],
               highlights: highlights.length > 0 ? highlights : fallback?.highlights ?? [],
-              responsibilities: responsibilities.length > 0 ? responsibilities : fallback?.responsibilities ?? []
+              responsibilities: responsibilities.length > 0 ? responsibilities : fallback?.responsibilities ?? [],
             }
           })
         )
@@ -290,7 +340,7 @@ export const loadDashboardData = async (
       profile: profileData,
       projects: projectsData,
       skills: skillsData,
-      contacts: contactsData
+      contacts: contactsData,
     }
   } catch {
     return staticData

@@ -1,34 +1,49 @@
-import type { ContactItem } from '../types'
+import type { RawContactItem } from '../types'
 
-export const getContactItems = (): ContactItem[] => [
+export const getContactItems = (): RawContactItem[] => [
   {
     id: 'contact-email',
-    label: 'Email',
+    label: { en: 'Email', id: 'Email' },
     value: 'daffa.ardhana@email.com',
-    hint: 'Best for project briefs or collaboration requests.'
+    hint: {
+      en: 'Best for project briefs or collaboration requests.',
+      id: 'Paling cocok untuk brief proyek atau ajakan kolaborasi.',
+    },
   },
   {
     id: 'contact-phone',
-    label: 'Phone',
+    label: { en: 'Phone', id: 'Telepon' },
     value: '+62 812-0000-0000',
-    hint: 'Quick calls for availability and timelines.'
+    hint: {
+      en: 'Quick calls for availability and timelines.',
+      id: 'Telepon singkat untuk ketersediaan dan timeline.',
+    },
   },
   {
     id: 'contact-instagram',
-    label: 'Instagram',
+    label: { en: 'Instagram', id: 'Instagram' },
     value: '@daffa.ardhana',
-    hint: 'Behind-the-scenes and design explorations.'
+    hint: {
+      en: 'Behind-the-scenes and design explorations.',
+      id: 'Cerita di balik layar dan eksplorasi desain.',
+    },
   },
   {
     id: 'contact-linkedin',
-    label: 'LinkedIn',
+    label: { en: 'LinkedIn', id: 'LinkedIn' },
     value: 'linkedin.com/in/daffa-ardhana',
-    hint: 'Connect for professional opportunities.'
+    hint: {
+      en: 'Connect for professional opportunities.',
+      id: 'Terhubung untuk peluang profesional.',
+    },
   },
   {
     id: 'contact-github',
-    label: 'GitHub',
+    label: { en: 'GitHub', id: 'GitHub' },
     value: 'github.com/daffa-ardhana',
-    hint: 'Browse code samples and open-source work.'
-  }
+    hint: {
+      en: 'Browse code samples and open-source work.',
+      id: 'Jelajahi contoh kode dan karya open-source.',
+    },
+  },
 ]

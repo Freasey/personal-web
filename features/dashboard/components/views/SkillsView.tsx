@@ -1,13 +1,16 @@
 import type { WheelEvent } from 'react'
 import type { SkillItem } from '../../types'
+import { UI, type Locale } from '../../i18n'
 import { FadeSection } from '../ui/FadeSection'
 
 interface SkillsViewProps {
   skills: SkillItem[]
+  locale: Locale
   onBack: () => void
 }
 
-export const SkillsView = ({ skills, onBack }: SkillsViewProps) => {
+export const SkillsView = ({ skills, locale, onBack }: SkillsViewProps) => {
+  const t = UI[locale]
   const handleWheel = (event: WheelEvent<HTMLDivElement>) => {
     const container = event.currentTarget
     const hasHorizontalOverflow = container.scrollWidth > container.clientWidth
@@ -24,15 +27,15 @@ export const SkillsView = ({ skills, onBack }: SkillsViewProps) => {
     <FadeSection className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6 flex flex-col gap-4 sm:gap-6">
       <div className="flex items-start sm:items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs sm:text-sm uppercase tracking-[0.25em] sm:tracking-[0.3em] text-white/60">Skills & Expertise</p>
-          <h2 className="text-xl sm:text-2xl font-bold mt-1 sm:mt-2">Capabilities</h2>
+          <p className="text-xs sm:text-sm uppercase tracking-[0.25em] sm:tracking-[0.3em] text-white/60">{t.skillsExpertise}</p>
+          <h2 className="text-xl sm:text-2xl font-bold mt-1 sm:mt-2">{t.capabilities}</h2>
         </div>
         <button
           type="button"
           onClick={onBack}
           className="shrink-0 text-xs text-white/70 hover:text-white border border-white/20 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition cursor-pointer"
         >
-          Back to menu
+          {t.backToMenu}
         </button>
       </div>
 

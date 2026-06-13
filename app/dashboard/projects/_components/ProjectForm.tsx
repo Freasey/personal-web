@@ -3,10 +3,18 @@
 import { useRouter } from 'next/navigation'
 import { useState, type FormEvent } from 'react'
 import { MediaPicker, type MediaKind, type MediaPickerValue } from './MediaPicker'
+import { LOCALES, UI, type Locale } from '@/features/dashboard/i18n'
+
+/** A value held in both languages while editing. */
+export interface BilingualValue {
+  en: string
+  id: string
+}
+
+const emptyBilingual = (): BilingualValue => ({ en: '', id: '' })
 
 export interface ProjectFormGalleryValue {
-  alt: string
-  caption: string
+  caption: BilingualValue
   imageId: string | null
   imageUrl: string | null
   imageKind: MediaKind | null
@@ -15,30 +23,30 @@ export interface ProjectFormGalleryValue {
 
 export interface ProjectFormValue {
   name: string
-  summary: string
-  description: string
+  summary: BilingualValue
+  description: BilingualValue
   imageId: string | null
   imageUrl: string | null
   imageKind: MediaKind | null
   bgClass: string
   year: string
-  role: string
+  role: BilingualValue
   stack: string[]
-  highlights: string[]
-  responsibilities: string[]
+  highlights: BilingualValue[]
+  responsibilities: BilingualValue[]
   gallery: ProjectFormGalleryValue[]
 }
 
 export const emptyProjectFormValue: ProjectFormValue = {
   name: '',
-  summary: '',
-  description: '',
+  summary: emptyBilingual(),
+  description: emptyBilingual(),
   imageId: null,
   imageUrl: null,
   imageKind: null,
   bgClass: '',
   year: '',
-  role: '',
+  role: emptyBilingual(),
   stack: [],
   highlights: [],
   responsibilities: [],
@@ -68,36 +76,39 @@ const primaryBtn =
 const dangerBtn =
   'inline-flex items-center justify-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm font-medium text-rose-200 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-50'
 
+type BilingualKey = 'summary' | 'description' | 'role'
+type ListKey = 'highlights' | 'responsibilities'
+
+const hasBilingualContent = (value: BilingualValue) =>
+  Boolean(value.en.trim() || value.id.trim())
+
 export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps) => {
   const router = useRouter()
   const [value, setValue] = useState<ProjectFormValue>(initialValue)
+  const [editLang, setEditLang] = useState<Locale>('en')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isTranslating, setIsTranslating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
 
-  const updateField = <K extends keyof ProjectFormValue>(
-    key: K,
-    next: ProjectFormValue[K],
-  ) => setValue((prev) => ({ ...prev, [key]: next }))
+  const otherLang: Locale = editLang === 'en' ? 'id' : 'en'
 
-  const updateListItem = (
-    key: 'stack' | 'highlights' | 'responsibilities',
-    index: number,
-    next: string,
-  ) =>
+  const updateBilingual = (key: BilingualKey, lang: Locale, next: string) =>
+    setValue((prev) => ({ ...prev, [key]: { ...prev[key], [lang]: next } }))
+
+  const updateListItem = (key: ListKey, index: number, lang: Locale, next: string) =>
     setValue((prev) => {
-      const list = [...prev[key]]
-      list[index] = next
+      const list = prev[key].map((item, i) =>
+        i === index ? { ...item, [lang]: next } : item,
+      )
       return { ...prev, [key]: list }
     })
 
-  const addListItem = (key: 'stack' | 'highlights' | 'responsibilities') =>
-    setValue((prev) => ({ ...prev, [key]: [...prev[key], ''] }))
+  const addListItem = (key: ListKey) =>
+    setValue((prev) => ({ ...prev, [key]: [...prev[key], emptyBilingual()] }))
 
-  const removeListItem = (
-    key: 'stack' | 'highlights' | 'responsibilities',
-    index: number,
-  ) =>
+  const removeListItem = (key: ListKey, index: number) =>
     setValue((prev) => ({
       ...prev,
       [key]: prev[key].filter((_, i) => i !== index),
@@ -113,14 +124,21 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
       return { ...prev, gallery }
     })
 
+  const updateGalleryCaption = (index: number, lang: Locale, next: string) =>
+    setValue((prev) => {
+      const gallery = prev.gallery.map((item, i) =>
+        i === index ? { ...item, caption: { ...item.caption, [lang]: next } } : item,
+      )
+      return { ...prev, gallery }
+    })
+
   const addGalleryItem = () =>
     setValue((prev) => ({
       ...prev,
       gallery: [
         ...prev.gallery,
         {
-          alt: '',
-          caption: '',
+          caption: emptyBilingual(),
           imageId: null,
           imageUrl: null,
           imageKind: null,
@@ -149,6 +167,80 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
       imageKind: next.kind,
     }))
 
+  // Translate everything currently in the active language into the other one.
+  const handleAutoTranslate = async () => {
+    const from = editLang
+    const to = otherLang
+    const snapshot = value
+
+    const texts: string[] = [
+      snapshot.summary[from],
+      snapshot.description[from],
+      snapshot.role[from],
+      ...snapshot.highlights.map((h) => h[from]),
+      ...snapshot.responsibilities.map((r) => r[from]),
+      ...snapshot.gallery.map((g) => g.caption[from]),
+    ]
+
+    if (!texts.some((t) => t.trim())) {
+      setError(`Nothing to translate in ${from.toUpperCase()} yet.`)
+      return
+    }
+
+    setIsTranslating(true)
+    setError(null)
+    setNotice(null)
+    try {
+      const response = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texts, from, to }),
+      })
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { error?: string }
+        throw new Error(data.error ?? `Translation failed (${response.status}).`)
+      }
+      const { translations } = (await response.json()) as { translations: string[] }
+
+      let k = 0
+      const next = (src: string, current: string) => {
+        const translated = translations[k++] ?? ''
+        return src.trim() ? translated : current
+      }
+
+      setValue((prev) => ({
+        ...prev,
+        summary: { ...prev.summary, [to]: next(snapshot.summary[from], prev.summary[to]) },
+        description: {
+          ...prev.description,
+          [to]: next(snapshot.description[from], prev.description[to]),
+        },
+        role: { ...prev.role, [to]: next(snapshot.role[from], prev.role[to]) },
+        highlights: prev.highlights.map((item, i) => ({
+          ...item,
+          [to]: next(snapshot.highlights[i]?.[from] ?? '', item[to]),
+        })),
+        responsibilities: prev.responsibilities.map((item, i) => ({
+          ...item,
+          [to]: next(snapshot.responsibilities[i]?.[from] ?? '', item[to]),
+        })),
+        gallery: prev.gallery.map((item, i) => ({
+          ...item,
+          caption: {
+            ...item.caption,
+            [to]: next(snapshot.gallery[i]?.caption[from] ?? '', item.caption[to]),
+          },
+        })),
+      }))
+      setEditLang(to)
+      setNotice(`Filled ${to.toUpperCase()} from ${from.toUpperCase()}. Review before saving.`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Translation failed.')
+    } finally {
+      setIsTranslating(false)
+    }
+  }
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     setError(null)
@@ -162,20 +254,20 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
     try {
       const payload = {
         name: value.name.trim(),
-        summary: value.summary.trim(),
-        description: value.description.trim(),
+        summary: value.summary,
+        description: value.description,
         imageId: value.imageId,
         year: value.year.trim(),
-        role: value.role.trim(),
+        role: value.role,
         stack: value.stack.map((s) => s.trim()).filter(Boolean),
-        highlights: value.highlights.map((s) => s.trim()).filter(Boolean),
-        responsibilities: value.responsibilities.map((s) => s.trim()).filter(Boolean),
+        highlights: value.highlights.filter(hasBilingualContent),
+        responsibilities: value.responsibilities.filter(hasBilingualContent),
         gallery: value.gallery
           .map((item) => ({
-            caption: item.caption.trim(),
+            caption: item.caption,
             imageId: item.imageId,
           }))
-          .filter((item) => item.imageId || item.caption),
+          .filter((item) => item.imageId || hasBilingualContent(item.caption)),
       }
 
       const url = mode === 'create' ? '/api/projects' : `/api/projects/${projectId}`
@@ -224,6 +316,8 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
     }
   }
 
+  const busy = isSubmitting || isDeleting || isTranslating
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {error && (
@@ -231,6 +325,44 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
           {error}
         </div>
       )}
+      {notice && (
+        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+          {notice}
+        </div>
+      )}
+
+      {/* Language editing controls */}
+      <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <span className={labelClass}>Editing language</span>
+          <div className="inline-flex items-center gap-0.5 rounded-full border border-white/15 bg-black/30 p-0.5">
+            {LOCALES.map((loc) => (
+              <button
+                key={loc}
+                type="button"
+                onClick={() => setEditLang(loc)}
+                aria-pressed={loc === editLang}
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                  loc === editLang ? 'bg-white/90 text-slate-900' : 'text-white/60 hover:text-white'
+                }`}
+              >
+                {UI[loc].languageName}
+              </button>
+            ))}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={handleAutoTranslate}
+          className={ghostBtn}
+          disabled={busy}
+          title={`Translate ${editLang.toUpperCase()} content into ${otherLang.toUpperCase()}`}
+        >
+          {isTranslating
+            ? 'Translating…'
+            : `Auto-translate ${editLang.toUpperCase()} → ${otherLang.toUpperCase()}`}
+        </button>
+      </div>
 
       <section className={sectionClass}>
         <h3 className="text-sm font-semibold tracking-wide text-white/80">Basic info</h3>
@@ -240,25 +372,25 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
             <input
               className={inputClass}
               value={value.name}
-              onChange={(e) => updateField('name', e.target.value)}
+              onChange={(e) => setValue((prev) => ({ ...prev, name: e.target.value }))}
               placeholder="Productivity Dashboard"
             />
           </label>
           <label className="flex flex-col gap-2 sm:col-span-2">
-            <span className={labelClass}>Summary</span>
+            <span className={labelClass}>Summary ({editLang.toUpperCase()})</span>
             <input
               className={inputClass}
-              value={value.summary}
-              onChange={(e) => updateField('summary', e.target.value)}
+              value={value.summary[editLang]}
+              onChange={(e) => updateBilingual('summary', editLang, e.target.value)}
               placeholder="One-line description for the card."
             />
           </label>
           <label className="flex flex-col gap-2 sm:col-span-2">
-            <span className={labelClass}>Description</span>
+            <span className={labelClass}>Description ({editLang.toUpperCase()})</span>
             <textarea
               className={`${inputClass} min-h-[120px]`}
-              value={value.description}
-              onChange={(e) => updateField('description', e.target.value)}
+              value={value.description[editLang]}
+              onChange={(e) => updateBilingual('description', editLang, e.target.value)}
               placeholder="Detailed description shown on the detail panel."
             />
           </label>
@@ -267,16 +399,16 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
             <input
               className={inputClass}
               value={value.year}
-              onChange={(e) => updateField('year', e.target.value)}
+              onChange={(e) => setValue((prev) => ({ ...prev, year: e.target.value }))}
               placeholder="2024"
             />
           </label>
           <label className="flex flex-col gap-2">
-            <span className={labelClass}>Role</span>
+            <span className={labelClass}>Role ({editLang.toUpperCase()})</span>
             <input
               className={inputClass}
-              value={value.role}
-              onChange={(e) => updateField('role', e.target.value)}
+              value={value.role[editLang]}
+              onChange={(e) => updateBilingual('role', editLang, e.target.value)}
               placeholder="Fullstack Engineer"
             />
           </label>
@@ -294,30 +426,38 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
       <ListSection
         title="Tech stack"
         items={value.stack}
-        onAdd={() => addListItem('stack')}
-        onRemove={(i) => removeListItem('stack', i)}
-        onChange={(i, v) => updateListItem('stack', i, v)}
+        onAdd={() => setValue((prev) => ({ ...prev, stack: [...prev.stack, ''] }))}
+        onRemove={(i) =>
+          setValue((prev) => ({ ...prev, stack: prev.stack.filter((_, idx) => idx !== i) }))
+        }
+        onChange={(i, v) =>
+          setValue((prev) => {
+            const stack = [...prev.stack]
+            stack[i] = v
+            return { ...prev, stack }
+          })
+        }
         placeholder="Next.js"
       />
 
-      <ListSection
+      <BilingualListSection
         title="Highlights"
+        lang={editLang}
         items={value.highlights}
         onAdd={() => addListItem('highlights')}
         onRemove={(i) => removeListItem('highlights', i)}
-        onChange={(i, v) => updateListItem('highlights', i, v)}
+        onChange={(i, v) => updateListItem('highlights', i, editLang, v)}
         placeholder="Role-based analytics with custom filters."
-        multiline
       />
 
-      <ListSection
+      <BilingualListSection
         title="Responsibilities"
+        lang={editLang}
         items={value.responsibilities}
         onAdd={() => addListItem('responsibilities')}
         onRemove={(i) => removeListItem('responsibilities', i)}
-        onChange={(i, v) => updateListItem('responsibilities', i, v)}
+        onChange={(i, v) => updateListItem('responsibilities', i, editLang, v)}
         placeholder="Owned frontend architecture."
-        multiline
       />
 
       <section className={sectionClass}>
@@ -369,13 +509,11 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
                   />
                 </div>
                 <label className="flex flex-col gap-2 sm:col-span-2">
-                  <span className={labelClass}>Caption</span>
+                  <span className={labelClass}>Caption ({editLang.toUpperCase()})</span>
                   <input
                     className={inputClass}
-                    value={item.caption}
-                    onChange={(e) =>
-                      updateGalleryItem(index, { caption: e.target.value })
-                    }
+                    value={item.caption[editLang]}
+                    onChange={(e) => updateGalleryCaption(index, editLang, e.target.value)}
                     placeholder="Overview analytics."
                   />
                 </label>
@@ -391,7 +529,7 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
             type="button"
             onClick={() => router.push('/dashboard/projects')}
             className={ghostBtn}
-            disabled={isSubmitting || isDeleting}
+            disabled={busy}
           >
             Cancel
           </button>
@@ -400,13 +538,13 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
               type="button"
               onClick={handleDelete}
               className={dangerBtn}
-              disabled={isSubmitting || isDeleting}
+              disabled={busy}
             >
               {isDeleting ? 'Deleting…' : 'Delete'}
             </button>
           )}
         </div>
-        <button type="submit" className={primaryBtn} disabled={isSubmitting || isDeleting}>
+        <button type="submit" className={primaryBtn} disabled={busy}>
           {isSubmitting
             ? mode === 'create'
               ? 'Creating…'
@@ -427,7 +565,6 @@ interface ListSectionProps {
   onRemove: (index: number) => void
   onChange: (index: number, value: string) => void
   placeholder?: string
-  multiline?: boolean
 }
 
 const ListSection = ({
@@ -437,7 +574,6 @@ const ListSection = ({
   onRemove,
   onChange,
   placeholder,
-  multiline,
 }: ListSectionProps) => (
   <section className={sectionClass}>
     <div className="flex items-center justify-between">
@@ -447,26 +583,66 @@ const ListSection = ({
       </button>
     </div>
     <div className="mt-4 flex flex-col gap-3">
-      {items.length === 0 && (
-        <p className="text-xs text-white/40">No entries yet.</p>
-      )}
+      {items.length === 0 && <p className="text-xs text-white/40">No entries yet.</p>}
       {items.map((item, index) => (
         <div key={index} className="flex items-start gap-3">
-          {multiline ? (
-            <textarea
-              className={`${inputClass} min-h-[60px]`}
-              value={item}
-              onChange={(e) => onChange(index, e.target.value)}
-              placeholder={placeholder}
-            />
-          ) : (
-            <input
-              className={inputClass}
-              value={item}
-              onChange={(e) => onChange(index, e.target.value)}
-              placeholder={placeholder}
-            />
-          )}
+          <input
+            className={inputClass}
+            value={item}
+            onChange={(e) => onChange(index, e.target.value)}
+            placeholder={placeholder}
+          />
+          <button
+            type="button"
+            onClick={() => onRemove(index)}
+            className="shrink-0 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white/70 transition hover:border-rose-500/30 hover:text-rose-200"
+          >
+            Remove
+          </button>
+        </div>
+      ))}
+    </div>
+  </section>
+)
+
+interface BilingualListSectionProps {
+  title: string
+  lang: Locale
+  items: BilingualValue[]
+  onAdd: () => void
+  onRemove: (index: number) => void
+  onChange: (index: number, value: string) => void
+  placeholder?: string
+}
+
+const BilingualListSection = ({
+  title,
+  lang,
+  items,
+  onAdd,
+  onRemove,
+  onChange,
+  placeholder,
+}: BilingualListSectionProps) => (
+  <section className={sectionClass}>
+    <div className="flex items-center justify-between">
+      <h3 className="text-sm font-semibold tracking-wide text-white/80">
+        {title} <span className="text-white/40">({lang.toUpperCase()})</span>
+      </h3>
+      <button type="button" onClick={onAdd} className={ghostBtn}>
+        + Add
+      </button>
+    </div>
+    <div className="mt-4 flex flex-col gap-3">
+      {items.length === 0 && <p className="text-xs text-white/40">No entries yet.</p>}
+      {items.map((item, index) => (
+        <div key={index} className="flex items-start gap-3">
+          <textarea
+            className={`${inputClass} min-h-[60px]`}
+            value={item[lang]}
+            onChange={(e) => onChange(index, e.target.value)}
+            placeholder={placeholder}
+          />
           <button
             type="button"
             onClick={() => onRemove(index)}

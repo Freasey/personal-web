@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { loadDashboardData } from '@/features/dashboard/data/neon.data'
+import { pickLocale } from '@/features/dashboard/i18n'
 
 export const metadata = {
   title: 'Projects · Dashboard',
@@ -70,11 +71,11 @@ export default async function ProjectsListPage() {
               <div className="flex flex-1 flex-col gap-3 p-5">
                 <div>
                   <p className="text-sm font-semibold">{project.name}</p>
-                  <p className="mt-1 text-xs text-white/60">{project.summary}</p>
+                  <p className="mt-1 text-xs text-white/60">{pickLocale(project.summary, 'en')}</p>
                 </div>
                 <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/40">
                   {project.year && <span>{project.year}</span>}
-                  {project.role && <span>{project.role}</span>}
+                  {pickLocale(project.role, 'en') && <span>{pickLocale(project.role, 'en')}</span>}
                   <span>{project.stack.length} stack</span>
                   <span>{project.gallery.length} images</span>
                 </div>

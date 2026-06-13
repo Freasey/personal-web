@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import type { ProjectItem } from '../../types'
+import { UI, type Locale } from '../../i18n'
 import { FadeSection } from '../ui/FadeSection'
 
 interface ProjectsViewProps {
   projects: ProjectItem[]
+  locale: Locale
   selectedProjectId: string | null
   onSelectProject: (id: string) => void
   onBack: () => void
@@ -11,10 +13,12 @@ interface ProjectsViewProps {
 
 export const ProjectsView = ({
   projects,
+  locale,
   selectedProjectId,
   onSelectProject,
   onBack
 }: ProjectsViewProps) => {
+  const t = UI[locale]
   const [showDetailMobile, setShowDetailMobile] = useState(false)
   const selectedProject =
     projects.find((project) => project.id === selectedProjectId) ?? projects[0]
@@ -23,15 +27,15 @@ export const ProjectsView = ({
     <FadeSection className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6 flex flex-col gap-4 sm:gap-6">
       <div className="flex items-start sm:items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs sm:text-sm uppercase tracking-[0.25em] sm:tracking-[0.3em] text-white/60">Projects</p>
-          <h2 className="text-xl sm:text-2xl font-bold mt-1 sm:mt-2">Selected Work</h2>
+          <p className="text-xs sm:text-sm uppercase tracking-[0.25em] sm:tracking-[0.3em] text-white/60">{t.projects}</p>
+          <h2 className="text-xl sm:text-2xl font-bold mt-1 sm:mt-2">{t.selectedWork}</h2>
         </div>
         <button
           type="button"
           onClick={onBack}
           className="shrink-0 text-xs text-white/70 hover:text-white border border-white/20 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition cursor-pointer"
         >
-          Back to menu
+          {t.backToMenu}
         </button>
       </div>
 
@@ -63,7 +67,7 @@ export const ProjectsView = ({
                 }}
                 className="mt-auto text-xs text-white/80 hover:text-white border border-white/20 rounded-full px-3 py-2 transition cursor-pointer"
               >
-                Detail Project
+                {t.detailProject}
               </button>
             </div>
           </article>
@@ -72,20 +76,20 @@ export const ProjectsView = ({
 
       <div className={`rounded-2xl border border-white/10 bg-black/30 px-4 sm:px-6 py-4 sm:py-5 ${showDetailMobile ? 'block' : 'hidden lg:block'}`}>
         <div className="flex justify-between items-center gap-3">
-          <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-white/60">Project Detail</p>
+          <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-white/60">{t.projectDetail}</p>
           <button
             type="button"
             onClick={() => setShowDetailMobile(false)}
             className="lg:hidden shrink-0 text-xs text-white/70 hover:text-white border border-white/20 rounded-full px-3 py-1.5 transition cursor-pointer"
           >
-            ← Back to List
+            {t.backToList}
           </button>
         </div>
         <h3 className="text-xl sm:text-2xl font-semibold mt-2 sm:mt-3 wrap-break-word">{selectedProject?.name}</h3>
         <p className="text-sm text-white/70 mt-2 leading-relaxed">{selectedProject?.description}</p>
 
         <div className="mt-4 sm:mt-5">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/60">Gallery</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-white/60">{t.gallery}</p>
           <div className="mt-3 flex flex-col lg:flex-row gap-3 sm:gap-4 lg:overflow-x-auto pb-2">
             {selectedProject?.gallery.map((item) => (
               <figure
@@ -108,7 +112,7 @@ export const ProjectsView = ({
         </div>
 
         <div className="mt-4 sm:mt-5">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/60">Highlights</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-white/60">{t.highlights}</p>
           <ul className="mt-3 space-y-2 text-sm text-white/80">
             {selectedProject?.highlights.map((item) => (
               <li key={item} className="flex gap-2">
@@ -120,7 +124,7 @@ export const ProjectsView = ({
         </div>
 
         <div className="mt-4 sm:mt-5">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/60">Responsibilities</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-white/60">{t.responsibilities}</p>
           <ul className="mt-3 space-y-2 text-sm text-white/80">
             {selectedProject?.responsibilities.map((item) => (
               <li key={item} className="flex gap-2">
@@ -132,7 +136,7 @@ export const ProjectsView = ({
         </div>
 
         <div className="mt-4 sm:mt-5">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/60">Tech Stack</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-white/60">{t.techStack}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {selectedProject?.stack.map((item) => (
               <span key={item} className="text-[11px] sm:text-xs bg-white/10 text-white/80 px-2.5 sm:px-3 py-1 rounded-full">
@@ -143,8 +147,8 @@ export const ProjectsView = ({
         </div>
 
         <div className="mt-4 sm:mt-5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/60">
-          <p>Role: {selectedProject?.role}</p>
-          <p>Year: {selectedProject?.year}</p>
+          <p>{t.role}: {selectedProject?.role}</p>
+          <p>{t.year}: {selectedProject?.year}</p>
         </div>
       </div>
     </FadeSection>

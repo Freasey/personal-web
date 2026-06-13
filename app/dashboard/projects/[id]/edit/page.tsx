@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { loadDashboardData } from '@/features/dashboard/data/neon.data'
+import { toBilingual } from '@/features/dashboard/i18n'
 import {
   ProjectForm,
   type ProjectFormValue,
@@ -27,20 +28,19 @@ export default async function EditProjectPage({ params }: PageProps) {
 
   const initialValue: ProjectFormValue = {
     name: project.name,
-    summary: project.summary,
-    description: project.description,
+    summary: toBilingual(project.summary),
+    description: toBilingual(project.description),
     imageId: project.imageId ?? null,
     imageUrl: project.image ?? null,
     imageKind: project.imageKind ?? null,
     bgClass: project.bgClass ?? '',
     year: project.year,
-    role: project.role,
+    role: toBilingual(project.role),
     stack: project.stack,
-    highlights: project.highlights,
-    responsibilities: project.responsibilities,
+    highlights: project.highlights.map((item) => toBilingual(item)),
+    responsibilities: project.responsibilities.map((item) => toBilingual(item)),
     gallery: project.gallery.map((item) => ({
-      alt: item.alt,
-      caption: item.caption,
+      caption: toBilingual(item.caption),
       imageId: item.imageId ?? null,
       imageUrl: item.image ?? null,
       imageKind: item.imageKind ?? null,
