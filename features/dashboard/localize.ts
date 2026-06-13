@@ -8,6 +8,7 @@ import type {
   CardItem,
   ContactItem,
   ProfileData,
+  ProjectCategory,
   ProjectItem,
   SkillItem,
 } from './types'
@@ -16,6 +17,7 @@ interface LocalizedDashboardData {
   cards: CardItem[]
   profile: ProfileData
   projects: ProjectItem[]
+  categories: ProjectCategory[]
   skills: SkillItem[]
   contacts: ContactItem[]
 }
@@ -76,6 +78,7 @@ const localizeProject = (
   imageId: project.imageId,
   imageKind: project.imageKind,
   bgClass: project.bgClass,
+  categoryId: project.categoryId,
   gallery: project.gallery.map((item) => ({
     id: item.id,
     image: item.image,
@@ -107,6 +110,15 @@ const localizeSkill = (
   bgClass: skill.bgClass,
 })
 
+const localizeCategory = (
+  category: RawDashboardData['categories'][number],
+  locale: Locale,
+): ProjectCategory => ({
+  id: category.id,
+  name: pickLocale(category.name, locale),
+  description: pickLocale(category.description, locale),
+})
+
 export const localizeDashboardData = (
   raw: RawDashboardData,
   locale: Locale,
@@ -114,6 +126,7 @@ export const localizeDashboardData = (
   cards: raw.cards.map((card) => localizeCard(card, locale)),
   profile: localizeProfile(raw.profile, locale),
   projects: raw.projects.map((project) => localizeProject(project, locale)),
+  categories: raw.categories.map((category) => localizeCategory(category, locale)),
   skills: raw.skills.map((skill) => localizeSkill(skill, locale)),
   contacts: raw.contacts.map((contact) => localizeContact(contact, locale)),
 })

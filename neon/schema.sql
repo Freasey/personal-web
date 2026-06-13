@@ -76,6 +76,18 @@ create table if not exists profile_experiences (
 -- ---------------------------------------------------------------------------
 -- projects + children
 -- ---------------------------------------------------------------------------
+-- project_categories: master "jenis proyek" used to group projects on the
+-- public site (Web Application, Mobile Application, Backend & API, …).
+create table if not exists project_categories (
+  id          uuid primary key default gen_random_uuid(),
+  name        jsonb,  -- { en, id }
+  description jsonb,  -- { en, id }
+  is_active   boolean not null default true,
+  sort_order  integer not null default 0,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
 create table if not exists projects (
   id          uuid primary key default gen_random_uuid(),
   name        text,
@@ -83,6 +95,7 @@ create table if not exists projects (
   summary     jsonb,  -- { en, id }
   description jsonb,  -- { en, id }
   image_id    uuid references assets(id) on delete set null,
+  category_id uuid references project_categories(id) on delete set null,
   year        integer,
   role        jsonb,  -- { en, id }
   is_active   boolean not null default true,
@@ -90,6 +103,8 @@ create table if not exists projects (
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
+
+create index if not exists projects_category_id_idx on projects (category_id);
 
 create table if not exists project_gallery (
   id         uuid primary key default gen_random_uuid(),

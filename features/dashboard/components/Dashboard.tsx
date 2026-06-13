@@ -67,7 +67,7 @@ export const Dashboard = () => {
     [rawData, locale],
   )
 
-  const { cards, profile, projects, skills, contacts } = dashboardData
+  const { cards, profile, projects, categories, skills, contacts } = dashboardData
   useEffect(() => {
     if (projects.length === 0) {
       setSelectedProjectId(null)
@@ -104,6 +104,7 @@ export const Dashboard = () => {
         ) : view === 'projects' ? (
           <ProjectsView
             projects={projects}
+            categories={categories}
             locale={locale}
             selectedProjectId={selectedProjectId}
             onSelectProject={setSelectedProjectId}

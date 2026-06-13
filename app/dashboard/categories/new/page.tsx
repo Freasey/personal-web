@@ -1,18 +1,11 @@
 import Link from 'next/link'
-import { loadDashboardData } from '@/features/dashboard/data/neon.data'
-import { pickLocale } from '@/features/dashboard/i18n'
-import { ProjectForm, emptyProjectFormValue } from '../_components/ProjectForm'
+import { CategoryForm, emptyCategoryFormValue } from '../_components/CategoryForm'
 
 export const metadata = {
-  title: 'New Project · Dashboard',
+  title: 'New Project Type · Dashboard',
 }
 
-export const dynamic = 'force-dynamic'
-
-export default async function NewProjectPage() {
-  const data = await loadDashboardData(null)
-  const categories = data.categories.map((c) => ({ id: c.id, name: pickLocale(c.name, 'en') }))
-
+export default function NewCategoryPage() {
   return (
     <main className="relative min-h-screen w-full overflow-hidden">
       <div className="pointer-events-none absolute inset-0">
@@ -23,20 +16,18 @@ export default async function NewProjectPage() {
       <div className="relative z-10 mx-auto flex max-w-4xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-10 lg:py-14">
         <header>
           <Link
-            href="/dashboard/projects"
+            href="/dashboard/categories"
             className="text-xs uppercase tracking-[0.18em] text-white/40 hover:text-white/70"
           >
-            ← Back to projects
+            ← Back to project types
           </Link>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-            New project
-          </h1>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">New project type</h1>
           <p className="mt-1 text-sm text-white/60">
-            Add a new case study to your public portfolio.
+            Tambah jenis proyek baru (mis. Web Application, Mobile Application).
           </p>
         </header>
 
-        <ProjectForm mode="create" initialValue={emptyProjectFormValue} categories={categories} />
+        <CategoryForm mode="create" initialValue={emptyCategoryFormValue} />
       </div>
     </main>
   )

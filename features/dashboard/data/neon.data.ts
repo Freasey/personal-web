@@ -5,6 +5,7 @@ import type {
   RawCardItem,
   RawContactItem,
   RawProfileData,
+  RawProjectCategory,
   RawProjectItem,
   RawSkillItem,
 } from '../types'
@@ -168,6 +169,12 @@ const mapContact = (row: Row, fallback?: RawContactItem): RawContactItem => ({
   hint: readLocalized(row, 'hint', 'description') ?? fallback?.hint ?? emptyText,
 })
 
+const mapCategory = (row: Row, fallback?: RawProjectCategory): RawProjectCategory => ({
+  id: readString(row, 'id') ?? fallback?.id ?? '',
+  name: readLocalized(row, 'name', 'title') ?? fallback?.name ?? emptyText,
+  description: readLocalized(row, 'description', 'summary') ?? fallback?.description ?? emptyText,
+})
+
 const mapProjectGalleryItem = (
   row: Row,
   fallback?: RawProjectItem['gallery'][number],
@@ -207,6 +214,7 @@ const mapProject = (row: Row, fallback?: RawProjectItem): RawProjectItem => ({
   responsibilities: fallback?.responsibilities ?? [],
   year: readString(row, 'year') ?? readNumber(row, 'year')?.toString() ?? fallback?.year ?? '',
   role: readLocalized(row, 'role', 'position') ?? fallback?.role ?? emptyText,
+  categoryId: readString(row, 'category_id') ?? fallback?.categoryId ?? null,
 })
 
 // Note: the `json_build_object(...)` expressions below are static SQL (no user
@@ -228,13 +236,14 @@ export const loadDashboardData = async (
   }
 
   try {
-    const [profiles, cards, contacts, projects, skills] = await Promise.all([
+    const [profiles, cards, contacts, projects, categories, skills] = await Promise.all([
       sql`select * from profiles` as Promise<Row[]>,
       sql`select c.*, case when a.id is not null then json_build_object('public_url', a.public_url, 'kind', a.kind) end as image
             from dashboard_cards c left join assets a on a.id = c.image_id` as Promise<Row[]>,
       sql`select * from contacts` as Promise<Row[]>,
       sql`select p.*, case when a.id is not null then json_build_object('public_url', a.public_url, 'kind', a.kind) end as image
             from projects p left join assets a on a.id = p.image_id` as Promise<Row[]>,
+      sql`select * from project_categories` as Promise<Row[]>,
       sql`select s.*, case when a.id is not null then json_build_object('public_url', a.public_url, 'kind', a.kind) end as image
             from skill_items s left join assets a on a.id = s.image_id` as Promise<Row[]>,
     ])
@@ -244,6 +253,7 @@ export const loadDashboardData = async (
     const remoteCards = sortRows(cards.filter(isActiveRow))
     const remoteContacts = sortRows(contacts.filter(isActiveRow))
     const remoteProjects = sortRows(projects.filter(isActiveRow))
+    const remoteCategories = sortRows(categories.filter(isActiveRow))
     const remoteSkills = sortRows(skills.filter(isActiveRow))
 
     const profileId = remoteProfile ? readString(remoteProfile, 'id') : undefined
@@ -335,10 +345,15 @@ export const loadDashboardData = async (
       ? remoteContacts.map((contact, index) => mapContact(contact, staticData.contacts[index]))
       : staticData.contacts
 
+    const categoriesData = remoteCategories.length > 0
+      ? remoteCategories.map((category, index) => mapCategory(category, staticData.categories[index]))
+      : staticData.categories
+
     return {
       cards: cardsData,
       profile: profileData,
       projects: projectsData,
+      categories: categoriesData,
       skills: skillsData,
       contacts: contactsData,
     }

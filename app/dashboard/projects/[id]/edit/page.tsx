@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { loadDashboardData } from '@/features/dashboard/data/neon.data'
-import { toBilingual } from '@/features/dashboard/i18n'
+import { pickLocale, toBilingual } from '@/features/dashboard/i18n'
 import {
   ProjectForm,
   type ProjectFormValue,
@@ -26,6 +26,8 @@ export default async function EditProjectPage({ params }: PageProps) {
     notFound()
   }
 
+  const categories = data.categories.map((c) => ({ id: c.id, name: pickLocale(c.name, 'en') }))
+
   const initialValue: ProjectFormValue = {
     name: project.name,
     summary: toBilingual(project.summary),
@@ -34,6 +36,7 @@ export default async function EditProjectPage({ params }: PageProps) {
     imageUrl: project.image ?? null,
     imageKind: project.imageKind ?? null,
     bgClass: project.bgClass ?? '',
+    categoryId: project.categoryId ?? '',
     year: project.year,
     role: toBilingual(project.role),
     stack: project.stack,
@@ -69,7 +72,12 @@ export default async function EditProjectPage({ params }: PageProps) {
           <p className="mt-1 text-sm text-white/60">{project.name}</p>
         </header>
 
-        <ProjectForm mode="edit" projectId={project.id} initialValue={initialValue} />
+        <ProjectForm
+          mode="edit"
+          projectId={project.id}
+          initialValue={initialValue}
+          categories={categories}
+        />
       </div>
     </main>
   )

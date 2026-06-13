@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic'
 
 const manageLinks = [
   { href: '/dashboard/projects', title: 'Projects', description: 'Studi kasus & karya' },
+  { href: '/dashboard/categories', title: 'Jenis proyek', description: 'Master kategori project' },
   { href: '/dashboard/profile', title: 'Bio', description: 'Identitas, highlights, pengalaman' },
   { href: '/dashboard/skills', title: 'Achievements', description: 'Penghargaan & keahlian' },
   { href: '/dashboard/contacts', title: 'Contacts', description: 'Channel kontak' },
@@ -139,7 +140,7 @@ export default async function DashboardPage() {
             Ubah konten yang tampil di portfolio publik secara dinamis.
           </p>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {manageLinks.map((item) => (
               <Link
                 key={item.href}

@@ -16,6 +16,7 @@ export interface ProjectInput {
   summary: LocalizedText
   description: LocalizedText
   imageId?: string | null
+  categoryId?: string | null
   year?: number | null
   role: LocalizedText
   stack: string[]
@@ -45,6 +46,7 @@ export interface ProjectRawRow {
   summary: string | null
   description: string | null
   image_id: string | null
+  category_id: string | null
   year: number | null
   role: string | null
   sort_order: number
@@ -109,10 +111,10 @@ export const createProject = async (input: ProjectInput): Promise<string> => {
 
   await sql.transaction([
     sql`
-      insert into projects (id, name, slug, summary, description, image_id, year, role, sort_order, is_active)
+      insert into projects (id, name, slug, summary, description, image_id, category_id, year, role, sort_order, is_active)
       values (${id}, ${input.name}, ${input.slug ?? null}, ${toJsonb(input.summary)}::jsonb,
-              ${toJsonb(input.description)}::jsonb, ${input.imageId ?? null}, ${input.year ?? null},
-              ${toJsonb(input.role)}::jsonb, ${input.sort_order ?? 0}, ${input.is_active ?? true})`,
+              ${toJsonb(input.description)}::jsonb, ${input.imageId ?? null}, ${input.categoryId ?? null},
+              ${input.year ?? null}, ${toJsonb(input.role)}::jsonb, ${input.sort_order ?? 0}, ${input.is_active ?? true})`,
     ...childInsertQueries(sql, id, input),
   ])
 
@@ -131,6 +133,7 @@ export const updateProject = async (id: string, input: ProjectInput) => {
         summary = ${toJsonb(input.summary)}::jsonb,
         description = ${toJsonb(input.description)}::jsonb,
         image_id = ${input.imageId ?? null},
+        category_id = ${input.categoryId ?? null},
         year = ${input.year ?? null},
         role = ${toJsonb(input.role)}::jsonb,
         sort_order = ${input.sort_order ?? 0},

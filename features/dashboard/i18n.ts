@@ -75,6 +75,15 @@ export interface UIStrings {
   techStack: string
   role: string
   year: string
+  // Projects — categories & search
+  projectTypes: string
+  chooseType: string
+  searchPlaceholder: string
+  backToTypes: string
+  otherType: string
+  projectsUnit: string
+  searchResults: string
+  noResults: string
   // Skills
   skillsExpertise: string
   capabilities: string
@@ -108,6 +117,14 @@ export const UI: Record<Locale, UIStrings> = {
     techStack: 'Tech Stack',
     role: 'Role',
     year: 'Year',
+    projectTypes: 'Project Types',
+    chooseType: 'Choose a type to explore',
+    searchPlaceholder: 'Search projects…',
+    backToTypes: '← All types',
+    otherType: 'Other',
+    projectsUnit: 'projects',
+    searchResults: 'Search results',
+    noResults: 'No projects found.',
     skillsExpertise: 'Skills & Expertise',
     capabilities: 'Capabilities',
     contact: 'Contact',
@@ -138,6 +155,14 @@ export const UI: Record<Locale, UIStrings> = {
     techStack: 'Teknologi',
     role: 'Peran',
     year: 'Tahun',
+    projectTypes: 'Jenis Proyek',
+    chooseType: 'Pilih jenis untuk menjelajah',
+    searchPlaceholder: 'Cari proyek…',
+    backToTypes: '← Semua jenis',
+    otherType: 'Lainnya',
+    projectsUnit: 'proyek',
+    searchResults: 'Hasil pencarian',
+    noResults: 'Tidak ada proyek yang cocok.',
     skillsExpertise: 'Keahlian & Kepakaran',
     capabilities: 'Kemampuan',
     contact: 'Kontak',

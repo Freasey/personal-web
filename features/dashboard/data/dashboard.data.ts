@@ -2,15 +2,18 @@ import type {
   CardItem,
   ContactItem,
   ProfileData,
+  ProjectCategory,
   ProjectItem,
   RawCardItem,
   RawContactItem,
   RawProfileData,
+  RawProjectCategory,
   RawProjectItem,
   RawSkillItem,
   SkillItem,
 } from '../types'
 import { getCards } from './cards.data'
+import { getProjectCategories } from './categories.data'
 import { getContactItems } from './contacts.data'
 import { getProfileData } from './profile.data'
 import { getProjectsData } from './projects.data'
@@ -21,6 +24,7 @@ export interface RawDashboardData {
   cards: RawCardItem[]
   profile: RawProfileData
   projects: RawProjectItem[]
+  categories: RawProjectCategory[]
   skills: RawSkillItem[]
   contacts: RawContactItem[]
 }
@@ -30,6 +34,7 @@ export interface DashboardData {
   cards: CardItem[]
   profile: ProfileData
   projects: ProjectItem[]
+  categories: ProjectCategory[]
   skills: SkillItem[]
   contacts: ContactItem[]
 }
@@ -40,6 +45,7 @@ export const createStaticDashboardData = (
   cards: getCards(blobUrl),
   profile: getProfileData(),
   projects: getProjectsData(blobUrl),
+  categories: getProjectCategories(),
   skills: getSkillsGallery(blobUrl),
   contacts: getContactItems(),
 })

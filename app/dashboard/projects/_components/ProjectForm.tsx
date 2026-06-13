@@ -29,6 +29,7 @@ export interface ProjectFormValue {
   imageUrl: string | null
   imageKind: MediaKind | null
   bgClass: string
+  categoryId: string
   year: string
   role: BilingualValue
   stack: string[]
@@ -45,6 +46,7 @@ export const emptyProjectFormValue: ProjectFormValue = {
   imageUrl: null,
   imageKind: null,
   bgClass: '',
+  categoryId: '',
   year: '',
   role: emptyBilingual(),
   stack: [],
@@ -53,10 +55,16 @@ export const emptyProjectFormValue: ProjectFormValue = {
   gallery: [],
 }
 
+export interface CategoryOption {
+  id: string
+  name: string
+}
+
 interface ProjectFormProps {
   mode: 'create' | 'edit'
   projectId?: string
   initialValue: ProjectFormValue
+  categories: CategoryOption[]
 }
 
 const inputClass =
@@ -82,7 +90,7 @@ type ListKey = 'highlights' | 'responsibilities'
 const hasBilingualContent = (value: BilingualValue) =>
   Boolean(value.en.trim() || value.id.trim())
 
-export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps) => {
+export const ProjectForm = ({ mode, projectId, initialValue, categories }: ProjectFormProps) => {
   const router = useRouter()
   const [value, setValue] = useState<ProjectFormValue>(initialValue)
   const [editLang, setEditLang] = useState<Locale>('en')
@@ -257,6 +265,7 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
         summary: value.summary,
         description: value.description,
         imageId: value.imageId,
+        categoryId: value.categoryId || null,
         year: value.year.trim(),
         role: value.role,
         stack: value.stack.map((s) => s.trim()).filter(Boolean),
@@ -393,6 +402,23 @@ export const ProjectForm = ({ mode, projectId, initialValue }: ProjectFormProps)
               onChange={(e) => updateBilingual('description', editLang, e.target.value)}
               placeholder="Detailed description shown on the detail panel."
             />
+          </label>
+          <label className="flex flex-col gap-2 sm:col-span-2">
+            <span className={labelClass}>Jenis proyek</span>
+            <select
+              className={`${inputClass} appearance-none`}
+              value={value.categoryId}
+              onChange={(e) => setValue((prev) => ({ ...prev, categoryId: e.target.value }))}
+            >
+              <option value="" className="bg-slate-900">
+                — Tanpa jenis —
+              </option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id} className="bg-slate-900">
+                  {category.name}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="flex flex-col gap-2">
             <span className={labelClass}>Year</span>

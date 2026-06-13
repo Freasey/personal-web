@@ -47,6 +47,12 @@ export interface ContactItem {
   hint: string
 }
 
+export interface ProjectCategory {
+  id: string
+  name: string
+  description: string
+}
+
 export interface ProjectGalleryItem {
   id: string
   image?: string
@@ -66,6 +72,7 @@ export interface ProjectItem {
   imageId?: string | null
   imageKind?: MediaKind | null
   bgClass?: string
+  categoryId?: string | null
   gallery: ProjectGalleryItem[]
   stack: string[]
   highlights: string[]
@@ -131,6 +138,12 @@ export interface RawContactItem {
   hint: LocalizedText
 }
 
+export interface RawProjectCategory {
+  id: string
+  name: LocalizedText
+  description: LocalizedText
+}
+
 export interface RawProjectGalleryItem {
   id: string
   image?: string
@@ -150,6 +163,7 @@ export interface RawProjectItem {
   imageId?: string | null
   imageKind?: MediaKind | null
   bgClass?: string
+  categoryId?: string | null
   gallery: RawProjectGalleryItem[]
   stack: string[]
   highlights: LocalizedText[]

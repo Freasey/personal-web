@@ -82,6 +82,7 @@ export const parseProjectInput = (body: unknown): ProjectInput | null => {
     summary: asLocalized(raw.summary),
     description: asLocalized(raw.description),
     imageId: asNullableString(raw.imageId),
+    categoryId: asNullableString(raw.categoryId),
     year: asNullableNumber(raw.year),
     role: asLocalized(raw.role),
     stack: asStringArray(raw.stack),
