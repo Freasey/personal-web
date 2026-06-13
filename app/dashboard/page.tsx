@@ -1,24 +1,71 @@
 import Link from 'next/link'
 import { LogoutButton } from './LogoutButton'
+import { getRecentVisits, getVisitStats, type VisitRow } from '@/lib/visits'
 
 export const metadata = {
   title: 'Dashboard',
 }
 
-const stats = [
-  { label: 'Projects', value: '12', hint: 'Active case studies' },
-  { label: 'Skills tracked', value: '24', hint: 'Across stacks & tools' },
-  { label: 'Contacts', value: '5', hint: 'Channels open' },
-  { label: 'Uptime', value: '99.9%', hint: 'Last 30 days' },
-]
+// Always render fresh: visitor analytics must not be cached.
+export const dynamic = 'force-dynamic'
 
-const activity = [
-  { title: 'Updated portfolio cards', time: 'Today', detail: 'Refined CTAs and copy on home view.' },
-  { title: 'Deployed personal site', time: 'Yesterday', detail: 'Shipped to production via Vercel.' },
-  { title: 'Added new project entry', time: '2 days ago', detail: 'Synced from Neon to dashboard.' },
-]
+const numberFmt = new Intl.NumberFormat('id-ID')
 
-export default function DashboardPage() {
+const formatTime = (iso: string): string => {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return '—'
+  return new Intl.DateTimeFormat('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+
+const formatLocation = (visit: VisitRow): string => {
+  const parts = [visit.city, visit.country].filter(Boolean)
+  return parts.length ? parts.join(', ') : '—'
+}
+
+const deviceBadgeClass = (device: string | null): string => {
+  switch (device) {
+    case 'Mobile':
+      return 'bg-emerald-500/15 text-emerald-300'
+    case 'Tablet':
+      return 'bg-amber-500/15 text-amber-300'
+    case 'Bot':
+      return 'bg-rose-500/15 text-rose-300'
+    default:
+      return 'bg-indigo-500/15 text-indigo-300'
+  }
+}
+
+export default async function DashboardPage() {
+  const [stats, visits] = await Promise.all([getVisitStats(), getRecentVisits(50)])
+
+  const cards = [
+    {
+      label: 'Pengunjung bulan ini',
+      value: numberFmt.format(stats.visitsThisMonth),
+      hint: 'Total kunjungan sejak awal bulan',
+    },
+    {
+      label: 'Pengunjung unik',
+      value: numberFmt.format(stats.uniqueThisMonth),
+      hint: 'Perangkat berbeda bulan ini',
+    },
+    {
+      label: 'Pengunjung baru',
+      value: numberFmt.format(stats.newThisMonth),
+      hint: 'Pertama kali berkunjung bulan ini',
+    },
+    {
+      label: 'Total kunjungan',
+      value: numberFmt.format(stats.totalAllTime),
+      hint: `${numberFmt.format(stats.uniqueAllTime)} unik · ${numberFmt.format(stats.visitsToday)} hari ini`,
+    },
+  ]
+
   return (
     <main className="relative min-h-screen w-full overflow-hidden">
       <div className="pointer-events-none absolute inset-0">
@@ -46,15 +93,32 @@ export default function DashboardPage() {
 
         <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-2xl sm:p-8">
           <p className="text-xs uppercase tracking-[0.2em] text-white/40">
-            Welcome back
+            Analitik pengunjung
           </p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight sm:text-2xl">
-            Everything is in good shape.
+            Siapa saja yang mengakses situsmu.
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-white/60">
-            A quiet workspace to monitor your portfolio, content, and recent activity.
-            Modern, fast, and just for you.
+            Pantau IP, perangkat, dan lokasi setiap pengunjung secara real-time —
+            langsung dari kunjungan yang tercatat di database.
           </p>
+        </section>
+
+        <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {cards.map((card) => (
+            <div
+              key={card.label}
+              className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl sm:p-5"
+            >
+              <p className="text-xs uppercase tracking-wider text-white/40">
+                {card.label}
+              </p>
+              <p className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+                {card.value}
+              </p>
+              <p className="mt-1 text-xs text-white/40">{card.hint}</p>
+            </div>
+          ))}
         </section>
 
         <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl sm:p-7">
@@ -87,45 +151,74 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl sm:p-5"
-            >
-              <p className="text-xs uppercase tracking-wider text-white/40">
-                {stat.label}
-              </p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-                {stat.value}
-              </p>
-              <p className="mt-1 text-xs text-white/40">{stat.hint}</p>
-            </div>
-          ))}
-        </section>
-
         <section className="grid gap-4 lg:grid-cols-3">
           <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl lg:col-span-2">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold tracking-wide text-white/80">
-                Recent activity
+                Kunjungan terbaru
               </h3>
-              <span className="text-xs text-white/40">Last 7 days</span>
+              <span className="text-xs text-white/40">{visits.length} terakhir</span>
             </div>
-            <ul className="mt-4 space-y-3">
-              {activity.map((item) => (
-                <li
-                  key={item.title}
-                  className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 transition hover:border-white/15 hover:bg-white/[0.04]"
-                >
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">{item.title}</p>
-                    <p className="text-xs text-white/40">{item.time}</p>
-                  </div>
-                  <p className="mt-1 text-xs text-white/50">{item.detail}</p>
-                </li>
-              ))}
-            </ul>
+
+            {visits.length === 0 ? (
+              <p className="mt-6 rounded-2xl border border-white/5 bg-white/[0.02] p-6 text-center text-sm text-white/50">
+                Belum ada kunjungan tercatat.
+              </p>
+            ) : (
+              <div className="mt-4 -mx-2 overflow-x-auto">
+                <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+                  <thead>
+                    <tr className="text-xs uppercase tracking-wider text-white/40">
+                      <th className="px-2 py-2 font-medium">IP Address</th>
+                      <th className="px-2 py-2 font-medium">Perangkat</th>
+                      <th className="px-2 py-2 font-medium">Lokasi</th>
+                      <th className="px-2 py-2 font-medium">Halaman</th>
+                      <th className="px-2 py-2 font-medium">Waktu</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visits.map((visit) => (
+                      <tr
+                        key={visit.id}
+                        className="border-t border-white/5 transition hover:bg-white/[0.03]"
+                      >
+                        <td className="px-2 py-3">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs text-white/80">
+                              {visit.ip_address ?? '—'}
+                            </span>
+                            {visit.is_new && (
+                              <span className="rounded-full bg-cyan-500/15 px-1.5 py-0.5 text-[10px] font-medium text-cyan-300">
+                                baru
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-2 py-3">
+                          <div className="flex flex-col gap-1">
+                            <span
+                              className={`w-fit rounded-full px-2 py-0.5 text-[10px] font-medium ${deviceBadgeClass(visit.device)}`}
+                            >
+                              {visit.device ?? 'Unknown'}
+                            </span>
+                            <span className="text-xs text-white/50">
+                              {[visit.browser, visit.os].filter(Boolean).join(' · ') || '—'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-2 py-3 text-white/70">{formatLocation(visit)}</td>
+                        <td className="px-2 py-3 font-mono text-xs text-white/60">
+                          {visit.path ?? '—'}
+                        </td>
+                        <td className="px-2 py-3 whitespace-nowrap text-white/60">
+                          {formatTime(visit.created_at)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl">
@@ -134,13 +227,13 @@ export default function DashboardPage() {
             </h3>
             <ul className="mt-4 space-y-2 text-sm">
               <li>
-                <a
+                <Link
                   href="/"
                   className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 transition hover:border-white/15 hover:bg-white/[0.05]"
                 >
                   <span>Public portfolio</span>
                   <span className="text-white/40">↗</span>
-                </a>
+                </Link>
               </li>
               <li>
                 <a

@@ -1,9 +1,11 @@
 import { Dashboard } from '@/features/dashboard/components/Dashboard'
 import { BlobBackground } from '@/features/dashboard/components/BlobBackground'
+import { VisitTracker } from '@/features/dashboard/components/VisitTracker'
 
 export default function HomePage() {
   return (
     <div className="relative min-h-screen w-full flex justify-center items-center flex-col bg-slate-950 overflow-x-hidden">
+      <VisitTracker />
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <BlobBackground />
       </div>

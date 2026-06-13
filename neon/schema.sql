@@ -180,3 +180,27 @@ create table if not exists contacts (
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
 );
+
+-- ---------------------------------------------------------------------------
+-- visits: one row per public-site page view, for the dashboard analytics.
+-- Plain technical strings only (IP, user-agent, parsed device/browser/os,
+-- geo from request headers). See neon/migrations/0002_visits.sql.
+-- ---------------------------------------------------------------------------
+create table if not exists visits (
+  id          uuid primary key default gen_random_uuid(),
+  visitor_id  text,                         -- stable per-browser id (cookie)
+  ip_address  text,
+  user_agent  text,
+  device      text,                         -- Mobile / Tablet / Desktop / Bot
+  browser     text,
+  os          text,
+  path        text,
+  referrer    text,
+  country     text,                         -- from x-vercel-ip-country
+  city        text,                         -- from x-vercel-ip-city
+  is_new      boolean not null default false,
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists visits_created_at_idx on visits (created_at desc);
+create index if not exists visits_visitor_id_idx on visits (visitor_id);
