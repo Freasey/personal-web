@@ -9,6 +9,13 @@ export const metadata = {
 // Always render fresh: visitor analytics must not be cached.
 export const dynamic = 'force-dynamic'
 
+const manageLinks = [
+  { href: '/dashboard/projects', title: 'Projects', description: 'Studi kasus & karya' },
+  { href: '/dashboard/profile', title: 'Bio', description: 'Identitas, highlights, pengalaman' },
+  { href: '/dashboard/skills', title: 'Achievements', description: 'Penghargaan & keahlian' },
+  { href: '/dashboard/contacts', title: 'Contacts', description: 'Channel kontak' },
+]
+
 const numberFmt = new Intl.NumberFormat('id-ID')
 
 const formatTime = (iso: string): string => {
@@ -122,32 +129,30 @@ export default async function DashboardPage() {
         </section>
 
         <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl sm:p-7">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-white/40">
-                Content management
-              </p>
-              <h3 className="mt-2 text-lg font-semibold tracking-tight">
-                Manage projects
-              </h3>
-              <p className="mt-1 text-sm text-white/60">
-                Create, edit, or delete projects shown on the public portfolio.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
+          <p className="text-xs uppercase tracking-[0.2em] text-white/40">
+            Content management
+          </p>
+          <h3 className="mt-2 text-lg font-semibold tracking-tight">
+            Kelola portfolio
+          </h3>
+          <p className="mt-1 text-sm text-white/60">
+            Ubah konten yang tampil di portfolio publik secara dinamis.
+          </p>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {manageLinks.map((item) => (
               <Link
-                href="/dashboard/projects"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/80 transition hover:border-white/20 hover:bg-white/[0.08]"
+                key={item.href}
+                href={item.href}
+                className="group flex flex-col gap-1 rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-white/20 hover:bg-white/[0.06]"
               >
-                Open project list
+                <span className="text-sm font-semibold">{item.title}</span>
+                <span className="text-xs text-white/50">{item.description}</span>
+                <span className="mt-2 text-xs text-white/40 transition group-hover:text-white/70">
+                  Buka →
+                </span>
               </Link>
-              <Link
-                href="/dashboard/projects/new"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 px-4 py-2 text-sm font-semibold text-white shadow transition hover:opacity-90"
-              >
-                + New project
-              </Link>
-            </div>
+            ))}
           </div>
         </section>
 
