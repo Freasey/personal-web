@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { loadDashboardData } from '@/features/dashboard/data/neon.data'
+import { listProjectsForDashboard } from '@/features/dashboard/data/projects.write'
 import { pickLocale } from '@/features/dashboard/i18n'
+import { ProjectActiveToggle } from './_components/ProjectActiveToggle'
 
 export const metadata = {
   title: 'Projects · Dashboard',
@@ -9,8 +10,7 @@ export const metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function ProjectsListPage() {
-  const data = await loadDashboardData(null)
-  const projects = data.projects
+  const projects = await listProjectsForDashboard()
 
   return (
     <main className="relative min-h-screen w-full overflow-hidden">
@@ -50,7 +50,9 @@ export default async function ProjectsListPage() {
           {projects.map((project) => (
             <article
               key={project.id}
-              className="flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl"
+              className={`flex flex-col overflow-hidden rounded-3xl border bg-white/[0.03] backdrop-blur-xl transition ${
+                project.isActive ? 'border-white/10' : 'border-white/5 opacity-60'
+              }`}
             >
               <div className="relative h-40">
                 {project.image ? (
@@ -61,11 +63,12 @@ export default async function ProjectsListPage() {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${
-                      project.bgClass ?? 'from-slate-900 via-slate-800 to-slate-700'
-                    }`}
-                  />
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700" />
+                )}
+                {!project.isActive && (
+                  <span className="absolute right-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-[0.65rem] font-medium uppercase tracking-wider text-white/70 backdrop-blur">
+                    Hidden
+                  </span>
                 )}
               </div>
               <div className="flex flex-1 flex-col gap-3 p-5">
@@ -76,8 +79,8 @@ export default async function ProjectsListPage() {
                 <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/40">
                   {project.year && <span>{project.year}</span>}
                   {pickLocale(project.role, 'en') && <span>{pickLocale(project.role, 'en')}</span>}
-                  <span>{project.stack.length} stack</span>
-                  <span>{project.gallery.length} images</span>
+                  <span>{project.stackCount} stack</span>
+                  <span>{project.galleryCount} images</span>
                 </div>
                 <div className="mt-auto flex items-center justify-between gap-2">
                   <Link
@@ -86,6 +89,7 @@ export default async function ProjectsListPage() {
                   >
                     Edit
                   </Link>
+                  <ProjectActiveToggle id={project.id} initialActive={project.isActive} />
                 </div>
               </div>
             </article>

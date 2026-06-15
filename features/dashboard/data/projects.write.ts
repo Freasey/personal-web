@@ -27,6 +27,28 @@ export interface ProjectInput {
   is_active?: boolean
 }
 
+/** Coerce a jsonb column (object, JSON string, or plain string) to LocalizedText. */
+const toLocalized = (value: unknown): LocalizedText | null => {
+  if (value == null) return null
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return null
+    if (trimmed.startsWith('{')) {
+      try {
+        const parsed: unknown = JSON.parse(trimmed)
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          return parsed as LocalizedText
+        }
+      } catch {
+        // fall through to plain string
+      }
+    }
+    return { en: trimmed }
+  }
+  if (typeof value === 'object' && !Array.isArray(value)) return value as LocalizedText
+  return null
+}
+
 /** Serialize a bilingual value for a jsonb column, or null when empty. */
 const toJsonb = (value: LocalizedText | null | undefined): string | null => {
   if (!value) return null
@@ -162,6 +184,53 @@ export const deleteProject = async (id: string) => {
     sql`delete from projects where id = ${id}`,
   ])
 
+  revalidatePublic()
+}
+
+export interface DashboardProjectListItem {
+  id: string
+  name: string
+  summary: LocalizedText | null
+  role: LocalizedText | null
+  year: number | null
+  image: string | null
+  stackCount: number
+  galleryCount: number
+  isActive: boolean
+}
+
+// Dashboard project list: returns ALL projects (active and inactive) so they
+// can be managed/toggled. The public site keeps using the active-only loader.
+export const listProjectsForDashboard = async (): Promise<DashboardProjectListItem[]> => {
+  const sql = getSql()
+
+  const rows = (await sql`
+    select
+      p.id, p.name, p.summary, p.role, p.year, p.is_active,
+      a.public_url as image,
+      (select count(*) from project_stacks s where s.project_id = p.id) as stack_count,
+      (select count(*) from project_gallery g where g.project_id = p.id) as gallery_count
+    from projects p
+    left join assets a on a.id = p.image_id
+    order by p.sort_order asc, p.created_at asc
+  `) as Record<string, unknown>[]
+
+  return rows.map((row) => ({
+    id: String(row.id),
+    name: typeof row.name === 'string' ? row.name : '',
+    summary: toLocalized(row.summary),
+    role: toLocalized(row.role),
+    year: row.year == null ? null : Number(row.year) || null,
+    image: typeof row.image === 'string' ? row.image : null,
+    stackCount: Number(row.stack_count) || 0,
+    galleryCount: Number(row.gallery_count) || 0,
+    isActive: row.is_active !== false,
+  }))
+}
+
+export const setProjectActive = async (id: string, isActive: boolean) => {
+  const sql = getSql()
+  await sql`update projects set is_active = ${isActive}, updated_at = now() where id = ${id}`
   revalidatePublic()
 }
 
