@@ -65,11 +65,9 @@ export default async function ProjectsListPage() {
                 ) : (
                   <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700" />
                 )}
-                {!project.isActive && (
-                  <span className="absolute right-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-[0.65rem] font-medium uppercase tracking-wider text-white/70 backdrop-blur">
-                    Hidden
-                  </span>
-                )}
+                <div className="absolute right-3 top-3 z-10">
+                  <ProjectActiveToggle id={project.id} initialActive={project.isActive} />
+                </div>
               </div>
               <div className="flex flex-1 flex-col gap-3 p-5">
                 <div>
@@ -89,7 +87,6 @@ export default async function ProjectsListPage() {
                   >
                     Edit
                   </Link>
-                  <ProjectActiveToggle id={project.id} initialActive={project.isActive} />
                 </div>
               </div>
             </article>

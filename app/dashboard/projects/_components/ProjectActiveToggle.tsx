@@ -44,10 +44,10 @@ export const ProjectActiveToggle = ({ id, initialActive }: Props) => {
       disabled={isLoading}
       aria-pressed={active}
       title={error ? 'Failed to update — try again' : active ? 'Visible on the public site' : 'Hidden from the public site'}
-      className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition disabled:opacity-50 ${
+      className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur-md transition disabled:opacity-50 ${
         active
-          ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300 hover:bg-emerald-400/15'
-          : 'border-white/10 bg-white/[0.04] text-white/50 hover:border-white/20 hover:bg-white/[0.08]'
+          ? 'border-emerald-400/40 bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30'
+          : 'border-white/15 bg-black/40 text-white/70 hover:border-white/30 hover:bg-black/55'
       }`}
     >
       <span

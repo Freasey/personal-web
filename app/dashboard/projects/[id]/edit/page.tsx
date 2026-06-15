@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { loadDashboardData } from '@/features/dashboard/data/neon.data'
+import { loadDashboardData, loadProjectForEdit } from '@/features/dashboard/data/neon.data'
 import { pickLocale, toBilingual } from '@/features/dashboard/i18n'
 import {
   ProjectForm,
@@ -19,8 +19,10 @@ interface PageProps {
 
 export default async function EditProjectPage({ params }: PageProps) {
   const { id } = await params
-  const data = await loadDashboardData(null)
-  const project = data.projects.find((item) => item.id === id)
+  const [project, data] = await Promise.all([
+    loadProjectForEdit(id),
+    loadDashboardData(null),
+  ])
 
   if (!project) {
     notFound()

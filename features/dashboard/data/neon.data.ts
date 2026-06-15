@@ -221,6 +221,56 @@ const mapProject = (row: Row, fallback?: RawProjectItem): RawProjectItem => ({
 // input) that mirror PostgREST's embedded asset object (`{public_url, kind}`),
 // so they live inline in the template literal — only real values use `${}`.
 
+// Load a single project for the dashboard edit form, regardless of is_active
+// (the shared loadDashboardData below filters to active-only for the public
+// site, which would 404 hidden projects in the editor). Returns null if the
+// project doesn't exist or there's no database.
+export const loadProjectForEdit = async (
+  id: string,
+): Promise<RawProjectItem | null> => {
+  const sql = tryGetSql()
+  if (!sql) return null
+
+  try {
+    const rows = (await sql`
+      select p.*, case when a.id is not null then json_build_object('public_url', a.public_url, 'kind', a.kind) end as image
+        from projects p left join assets a on a.id = p.image_id
+        where p.id = ${id}`) as Row[]
+    const project = rows[0]
+    if (!project) return null
+
+    const [galleryRows, stackRows, highlightRows, responsibilityRows] = await Promise.all([
+      sql`select g.*, case when a.id is not null then json_build_object('public_url', a.public_url, 'kind', a.kind) end as asset
+            from project_gallery g left join assets a on a.id = g.asset_id
+            where g.project_id = ${id}` as Promise<Row[]>,
+      sql`select * from project_stacks where project_id = ${id}` as Promise<Row[]>,
+      sql`select * from project_highlights where project_id = ${id}` as Promise<Row[]>,
+      sql`select * from project_responsibilities where project_id = ${id}` as Promise<Row[]>,
+    ])
+
+    const gallery = sortRows(galleryRows).map((row) => mapProjectGalleryItem(row))
+    const stack = sortRows(stackRows)
+      .map((row) => readString(row, 'stack_name', 'stack', 'name', 'value') ?? '')
+      .filter(Boolean)
+    const highlights = sortRows(highlightRows)
+      .map((row) => readLocalized(row, 'highlight', 'content', 'text'))
+      .filter((item): item is LocalizedText => hasLocalizedContent(item))
+    const responsibilities = sortRows(responsibilityRows)
+      .map((row) => readLocalized(row, 'responsibility', 'content', 'text', 'description'))
+      .filter((item): item is LocalizedText => hasLocalizedContent(item))
+
+    return {
+      ...mapProject(project),
+      gallery,
+      stack,
+      highlights,
+      responsibilities,
+    }
+  } catch {
+    return null
+  }
+}
+
 export const loadDashboardData = async (
   blobUrl: Record<string, string> | null,
 ): Promise<RawDashboardData> => {
