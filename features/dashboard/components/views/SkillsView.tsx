@@ -2,6 +2,7 @@ import type { WheelEvent } from 'react'
 import type { SkillItem } from '../../types'
 import { UI, type Locale } from '../../i18n'
 import { FadeSection } from '../ui/FadeSection'
+import { Media } from '../ui/Media'
 
 interface SkillsViewProps {
   skills: SkillItem[]
@@ -46,13 +47,13 @@ export const SkillsView = ({ skills, locale, onBack }: SkillsViewProps) => {
             className="w-full lg:min-w-[420px] lg:max-w-[420px] rounded-2xl border border-white/10 bg-black/30 overflow-hidden flex lg:block flex-col"
           >
             <div className="h-40 sm:h-56 relative shrink-0">
-              {skill.image ? (
-                <img src={skill.image} alt={skill.name} className="h-full w-full object-cover" />
-              ) : (
-                <div
-                  className={`absolute inset-0 bg-linear-to-br ${skill.bgClass ?? 'from-slate-900 via-slate-800 to-slate-700'}`}
-                />
-              )}
+              <Media
+                src={skill.image}
+                kind={skill.imageKind}
+                alt={skill.name}
+                className="h-full w-full object-cover"
+                fallbackClass={skill.bgClass}
+              />
             </div>
             <div className="p-4 sm:p-5">
               <p className="text-base sm:text-lg font-semibold">{skill.name}</p>

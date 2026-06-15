@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { ProjectCategory, ProjectItem } from '../../types'
 import { UI, type Locale } from '../../i18n'
 import { FadeSection } from '../ui/FadeSection'
+import { Media } from '../ui/Media'
 
 interface ProjectsViewProps {
   projects: ProjectItem[]
@@ -131,14 +132,13 @@ export const ProjectsView = ({
               } bg-black/30 overflow-hidden flex flex-col`}
             >
               <div className="h-36 sm:h-40 relative">
-                {project.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={project.image} alt={project.name} className="h-full w-full object-cover" />
-                ) : (
-                  <div
-                    className={`absolute inset-0 bg-linear-to-br ${project.bgClass ?? 'from-slate-900 via-slate-800 to-slate-700'}`}
-                  />
-                )}
+                <Media
+                  src={project.image}
+                  kind={project.imageKind}
+                  alt={project.name}
+                  className="h-full w-full object-cover"
+                  fallbackClass={project.bgClass}
+                />
               </div>
               <div className="p-3 sm:p-4 flex flex-col gap-2 flex-1">
                 <p className="text-sm font-semibold">{project.name}</p>
@@ -189,14 +189,13 @@ export const ProjectsView = ({
                   className="w-full lg:min-w-[240px] lg:max-w-[240px] shrink-0 rounded-xl border border-white/10 bg-black/40 overflow-hidden"
                 >
                   <div className="h-36 sm:h-32 relative">
-                    {item.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.image} alt={item.alt} className="h-full w-full object-cover" />
-                    ) : (
-                      <div
-                        className={`absolute inset-0 bg-linear-to-br ${item.bgClass ?? 'from-slate-900 via-slate-800 to-slate-700'}`}
-                      />
-                    )}
+                    <Media
+                      src={item.image}
+                      kind={item.imageKind}
+                      alt={item.alt}
+                      className="h-full w-full object-cover"
+                      fallbackClass={item.bgClass}
+                    />
                   </div>
                   <figcaption className="p-3 text-xs text-white/70">{item.caption}</figcaption>
                 </figure>
