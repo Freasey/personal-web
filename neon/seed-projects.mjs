@@ -1,32 +1,22 @@
-// Generic, data-driven project seeder for the personal-web Neon database.
+// Portfolio project seeder for the personal-web Neon database.
 //
-// Reads a JSON file describing one or more projects and upserts each into
-// `projects` (+ project_stacks / project_highlights / project_responsibilities
-// / project_gallery). Idempotent per slug: a project with a matching slug is
-// deleted (children cascade) then re-inserted -- safe to re-run, but it WILL
-// overwrite manual dashboard edits for any slug present in the JSON.
+// Bridge used by an agent: when asked to "make a portfolio entry" for a project,
+// generate a JSON file describing it (see neon/SEEDING.md for the shape and the
+// agent workflow) and run this script to upsert it into Neon.
+//
+// Writes to: projects (+ project_stacks / project_highlights /
+// project_responsibilities / project_gallery). Translatable text is stored as
+// bilingual jsonb { "en": "...", "id": "..." }; tech names / slugs / urls stay
+// plain text. Categories are resolved by name against project_categories.
+//
+// Idempotent per slug: a slug is derived from `name` when not given, then the
+// matching project (and its cascade children) is deleted and re-inserted -- so
+// re-running the same JSON updates in place instead of duplicating.
 //
 // Usage:
-//   node neon/seed-projects.mjs                         (defaults to neon/projects.seed.json)
-//   node neon/seed-projects.mjs neon/my-projects.json
-//   node neon/seed-projects.mjs neon/projects.seed.json --inactive   (seed as hidden drafts)
-//   node --env-file=.env neon/seed-projects.mjs ...     (if DATABASE_URL is not already exported)
-//
-// JSON shape (array of projects, or a single project object):
-//   {
-//     "slug": "my-project",            // required, used as the upsert key
-//     "name": "My Project",            // required
-//     "summary": "short tagline",
-//     "description": "~40 word blurb",
-//     "role": "Backend Engineer",
-//     "year": 2024,
-//     "isActive": true,                // optional; CLI --inactive overrides to false for all
-//     "sortOrder": 1,                  // optional; defaults to file order
-//     "stack": ["Node.js", "..."],
-//     "highlights": ["...", "..."],
-//     "responsibilities": ["...", "..."],
-//     "gallery": ["caption", { "caption": "...", "imageId": "<asset-uuid>" }]
-//   }
+//   node neon/seed-projects.mjs <path-to.json>
+//   node neon/seed-projects.mjs neon/_input.json --inactive
+//   node --env-file=.env neon/seed-projects.mjs <path>   (if DATABASE_URL unset)
 
 import { readFileSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
@@ -36,9 +26,11 @@ import { neon } from '@neondatabase/serverless'
 const argv = process.argv.slice(2)
 const FORCE_INACTIVE = argv.includes('--inactive')
 const dataPathArg = argv.find((a) => !a.startsWith('--'))
-const dataUrl = dataPathArg
-  ? new URL(dataPathArg, `file://${process.cwd()}/`)
-  : new URL('./projects.seed.json', import.meta.url)
+if (!dataPathArg) {
+  console.error('Usage: node neon/seed-projects.mjs <path-to.json> [--inactive]')
+  process.exit(1)
+}
+const dataUrl = new URL(dataPathArg, `file://${process.cwd()}/`)
 
 // --- load DATABASE_URL (process.env first, then ../.env) ---------------------
 function loadDatabaseUrl() {
@@ -63,10 +55,16 @@ if (!connectionString) {
 
 const sql = neon(connectionString)
 
-// --- normalize ---------------------------------------------------------------
+// --- helpers -----------------------------------------------------------------
 const asString = (v) => (typeof v === 'string' ? v.trim() : '')
 const asStringArray = (v) =>
   Array.isArray(v) ? v.map(asString).filter(Boolean) : []
+
+const slugify = (s) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
 
 // Translatable fields accept a plain string (treated as English) or a bilingual
 // { en, id } object. Returns a JSON string for a jsonb column, or null if empty.
@@ -88,33 +86,64 @@ const asLocalizedJson = (v) => {
 const asLocalizedJsonArray = (v) =>
   Array.isArray(v) ? v.map(asLocalizedJson).filter(Boolean) : []
 
+// Gallery entries: a plain/bilingual caption, or { caption, imageId }.
 const asGallery = (v) => {
   if (!Array.isArray(v)) return []
   const out = []
   for (const raw of v) {
-    if (typeof raw === 'string' || (raw && typeof raw === 'object' && !('caption' in raw))) {
-      const caption = asLocalizedJson(raw)
-      if (caption) out.push({ caption, imageId: null })
-    } else if (raw && typeof raw === 'object') {
+    if (raw && typeof raw === 'object' && 'caption' in raw) {
       const caption = asLocalizedJson(raw.caption)
       const imageId = asString(raw.imageId) || null
       if (caption || imageId) out.push({ caption, imageId })
+    } else {
+      const caption = asLocalizedJson(raw)
+      if (caption) out.push({ caption, imageId: null })
     }
   }
   return out
 }
 
-function normalize(raw, index) {
-  const slug = asString(raw.slug)
+// --- category resolution -----------------------------------------------------
+// Map a category name (en or id, case-insensitive) to its uuid. A raw uuid in
+// `categoryId` is used as-is. Unknown names resolve to null with a warning.
+let categoryCache = null
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+async function resolveCategoryId(raw) {
+  const explicit = asString(raw.categoryId)
+  if (explicit && UUID_RE.test(explicit)) return explicit
+
+  const wanted = asString(raw.category)
+  if (!wanted) return null
+
+  if (!categoryCache) {
+    const rows = await sql`select id, name from project_categories`
+    categoryCache = rows.map((r) => {
+      const name = typeof r.name === 'string' ? JSON.parse(r.name) : r.name || {}
+      return { id: r.id, en: (name.en || '').toLowerCase(), id_: (name.id || '').toLowerCase() }
+    })
+  }
+  const key = wanted.toLowerCase()
+  const hit = categoryCache.find((c) => c.en === key || c.id_ === key)
+  if (!hit) {
+    console.warn(`  ! category "${wanted}" not found in project_categories -> null`)
+    return null
+  }
+  return hit.id
+}
+
+// --- normalize ---------------------------------------------------------------
+async function normalize(raw, index) {
   const name = asString(raw.name)
-  if (!slug) throw new Error(`Project #${index + 1} is missing "slug".`)
-  if (!name) throw new Error(`Project "${slug}" is missing "name".`)
+  if (!name) throw new Error(`Project #${index + 1} is missing "name".`)
+  const slug = asString(raw.slug) || slugify(name)
   return {
     slug,
     name,
     summary: asLocalizedJson(raw.summary),
     description: asLocalizedJson(raw.description),
     role: asLocalizedJson(raw.role),
+    categoryId: await resolveCategoryId(raw),
     year: Number.isFinite(raw.year) ? raw.year : null,
     isActive: FORCE_INACTIVE ? false : raw.isActive !== false,
     sortOrder: Number.isFinite(raw.sortOrder) ? raw.sortOrder : index + 1,
@@ -131,9 +160,11 @@ async function seedProject(p) {
   const queries = [
     sql`delete from projects where slug = ${p.slug}`,
     sql`
-      insert into projects (id, name, slug, summary, description, year, role, sort_order, is_active)
-      values (${id}, ${p.name}, ${p.slug}, ${p.summary}::jsonb, ${p.description}::jsonb,
-              ${p.year}, ${p.role}::jsonb, ${p.sortOrder}, ${p.isActive})`,
+      insert into projects
+        (id, name, slug, summary, description, category_id, year, role, sort_order, is_active)
+      values
+        (${id}, ${p.name}, ${p.slug}, ${p.summary}::jsonb, ${p.description}::jsonb,
+         ${p.categoryId}, ${p.year}, ${p.role}::jsonb, ${p.sortOrder}, ${p.isActive})`,
   ]
   p.gallery.forEach((g, i) =>
     queries.push(sql`
@@ -168,15 +199,17 @@ async function main() {
     process.exit(1)
   }
   const list = Array.isArray(parsed) ? parsed : [parsed]
-  const projects = list.map(normalize)
 
   console.log(
-    `Seeding ${projects.length} project(s) from ${dataUrl.pathname}` +
+    `Seeding ${list.length} project(s) from ${dataUrl.pathname}` +
       (FORCE_INACTIVE ? ' (forced is_active=false)' : ''),
   )
-  for (const p of projects) {
+  for (let i = 0; i < list.length; i++) {
+    const p = await normalize(list[i], i)
     const id = await seedProject(p)
-    console.log(`  ✓ ${p.name}  [${p.slug}]  is_active=${p.isActive}  -> ${id}`)
+    console.log(
+      `  ✓ ${p.name}  [${p.slug}]  category=${p.categoryId ?? 'none'}  is_active=${p.isActive}  -> ${id}`,
+    )
   }
   console.log('Done.')
 }

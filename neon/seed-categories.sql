@@ -1,6 +1,6 @@
 -- Seed: default project categories (jenis proyek).
 --
--- Run AFTER neon/migrations/0003_project_categories.sql. Inserts the five
+-- Run AFTER neon/schema.sql. Inserts the five
 -- starter types with real UUID ids so they show up in the dashboard project
 -- dropdown and the public type grid. Idempotent: only seeds when the table is
 -- empty, so re-running won't create duplicates.

@@ -1,12 +1,11 @@
 -- NeonDB schema for personal-web (migrated from Supabase/PostgREST).
 -- Plain Postgres: no RLS, no Supabase auth/storage assumptions.
--- Run once against your Neon database before loading neon/seed.sql.
+-- Single source of truth: run this once against a fresh Neon database, then
+-- run neon/seed-categories.sql to populate the project categories.
 --
 -- i18n: user-authored, translatable text is stored as jsonb { "en": "...",
 -- "id": "..." } so the site can switch between English and Indonesian. Plain
--- text is reserved for identifiers, URLs, tech names, dates, and enums. If you
--- already created these tables with text columns, run neon/migrations/
--- 0001_bilingual_jsonb.sql instead of recreating them.
+-- text is reserved for identifiers, URLs, tech names, dates, and enums.
 
 create extension if not exists "pgcrypto"; -- for gen_random_uuid()
 
