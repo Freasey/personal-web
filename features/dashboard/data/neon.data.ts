@@ -2,7 +2,6 @@ import 'server-only'
 
 import type {
   MediaKind,
-  RawCardItem,
   RawContactItem,
   RawProfileData,
   RawProjectCategory,
@@ -136,21 +135,6 @@ const sortRows = <T extends Row>(rows: T[]) =>
   })
 
 const emptyText: LocalizedText = { en: '' }
-
-const mapCard = (row: Row, fallback?: RawCardItem): RawCardItem => ({
-  id: Number(readNumber(row, 'id') ?? fallback?.id ?? 0),
-  image: readImage(row) ?? fallback?.image,
-  imageId: readImageId(row),
-  imageKind: readImageKind(row),
-  imageAlt: readLocalized(row, 'image_alt', 'alt') ?? fallback?.imageAlt,
-  backgroundSvg: readString(row, 'background_svg', 'backgroundSvg') ?? fallback?.backgroundSvg,
-  title: readLocalized(row, 'title', 'name') ?? fallback?.title ?? emptyText,
-  subtitle: readLocalized(row, 'subtitle') ?? fallback?.subtitle ?? emptyText,
-  description: readLocalized(row, 'description', 'summary') ?? fallback?.description ?? emptyText,
-  cta: readLocalized(row, 'cta', 'cta_label', 'call_to_action') ?? fallback?.cta,
-  href: readString(row, 'href', 'link') ?? fallback?.href,
-  bgClass: fallback?.bgClass,
-})
 
 const mapSkill = (row: Row, fallback?: RawSkillItem): RawSkillItem => ({
   id: readString(row, 'id') ?? fallback?.id ?? '',
@@ -286,10 +270,8 @@ export const loadDashboardData = async (
   }
 
   try {
-    const [profiles, cards, contacts, projects, categories, skills] = await Promise.all([
+    const [profiles, contacts, projects, categories, skills] = await Promise.all([
       sql`select * from profiles` as Promise<Row[]>,
-      sql`select c.*, case when a.id is not null then json_build_object('public_url', a.public_url, 'kind', a.kind) end as image
-            from dashboard_cards c left join assets a on a.id = c.image_id` as Promise<Row[]>,
       sql`select * from contacts` as Promise<Row[]>,
       sql`select p.*, case when a.id is not null then json_build_object('public_url', a.public_url, 'kind', a.kind) end as image
             from projects p left join assets a on a.id = p.image_id` as Promise<Row[]>,
@@ -300,7 +282,6 @@ export const loadDashboardData = async (
 
     const activeProfileRows = sortRows(profiles.filter(isActiveRow))
     const remoteProfile = activeProfileRows[0]
-    const remoteCards = sortRows(cards.filter(isActiveRow))
     const remoteContacts = sortRows(contacts.filter(isActiveRow))
     const remoteProjects = sortRows(projects.filter(isActiveRow))
     const remoteCategories = sortRows(categories.filter(isActiveRow))
@@ -316,9 +297,8 @@ export const loadDashboardData = async (
         ])
       : [[], [], []]
 
-    const cardsData = remoteCards.length > 0
-      ? remoteCards.map((card, index) => mapCard(card, staticData.cards[index]))
-      : staticData.cards
+    // Navigation cards live in the UI (./cards.data), not the database.
+    const cardsData = staticData.cards
 
     const profileData = remoteProfile
       ? (() => {

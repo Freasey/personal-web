@@ -56,6 +56,7 @@ export const hasLocalizedContent = (value: MaybeLocalized): boolean => {
 export interface UIStrings {
   languageName: string
   switchTo: string
+  loading: string
   backToMenu: string
   backToList: string
   // Bio
@@ -100,6 +101,7 @@ export const UI: Record<Locale, UIStrings> = {
   en: {
     languageName: 'English',
     switchTo: 'Bahasa Indonesia',
+    loading: 'Loading…',
     backToMenu: 'Back to menu',
     backToList: '← Back to List',
     portfolioBio: 'Portfolio Bio',
@@ -138,6 +140,7 @@ export const UI: Record<Locale, UIStrings> = {
   id: {
     languageName: 'Bahasa Indonesia',
     switchTo: 'English',
+    loading: 'Memuat…',
     backToMenu: 'Kembali ke menu',
     backToList: '← Kembali ke Daftar',
     portfolioBio: 'Bio Portfolio',

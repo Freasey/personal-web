@@ -13,12 +13,8 @@ import type {
   SkillItem,
 } from '../types'
 import { getCards } from './cards.data'
-import { getContactItems } from './contacts.data'
-import { getProfileData } from './profile.data'
-import { getProjectsData } from './projects.data'
-import { getSkillsGallery } from './skills.data'
 
-/** Raw bilingual data straight from the data files / DB (translatable fields are { en, id }). */
+/** Raw bilingual data straight from the DB (translatable fields are { en, id }). */
 export interface RawDashboardData {
   cards: RawCardItem[]
   profile: RawProfileData
@@ -38,17 +34,36 @@ export interface DashboardData {
   contacts: ContactItem[]
 }
 
+/**
+ * An empty profile used as the base shape before DB content arrives. Content
+ * (profile/projects/skills/contacts/categories) is no longer seeded with dummy
+ * data — it must come from the database.
+ */
+const emptyProfile: RawProfileData = {
+  name: '',
+  role: { en: '' },
+  location: { en: '' },
+  summary: { en: '' },
+  availability: { en: '' },
+  highlights: [],
+  skills: [],
+  experience: [],
+}
+
+/**
+ * Base dashboard data. Navigation cards live in the UI (see ./cards.data); every
+ * other section starts empty and is filled from the database. There is no dummy
+ * content fallback anymore.
+ */
 export const createStaticDashboardData = (
   blobUrl: Record<string, string> | null,
 ): RawDashboardData => ({
   cards: getCards(blobUrl),
-  profile: getProfileData(),
-  projects: getProjectsData(blobUrl),
-  // No static fallback: categories must come from the DB so their ids are real
-  // UUIDs (a static id like "cat-web" can't satisfy projects.category_id).
+  profile: emptyProfile,
+  projects: [],
   categories: [],
-  skills: getSkillsGallery(blobUrl),
-  contacts: getContactItems(),
+  skills: [],
+  contacts: [],
 })
 
 export const getStaticDashboardData = createStaticDashboardData

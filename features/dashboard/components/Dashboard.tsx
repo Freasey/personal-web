@@ -6,13 +6,17 @@ import { localizeDashboardData } from '../localize'
 import { getInitialLocale, persistLocale, type Locale } from '../i18n'
 import { BioView, CardsView, ContactView, ProjectsView, SkillsView } from './views'
 import { LanguageToggle } from './LanguageToggle'
+import { DashboardLoading } from './DashboardLoading'
 
 type DashboardView = 'cards' | 'bio' | 'projects' | 'skills' | 'contact'
 
 export const Dashboard = () => {
   const [view, setView] = useState<DashboardView>('cards')
   const { blobUrl } = useBlobs()
-  const [rawData, setRawData] = useState<RawDashboardData>(() => getStaticDashboardData(blobUrl))
+  // No dummy data: content starts empty and is filled from the DB. `rawData`
+  // is null until the first fetch resolves, while a loading state is shown.
+  const [rawData, setRawData] = useState<RawDashboardData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
   const [locale, setLocale] = useState<Locale>('en')
 
@@ -27,10 +31,6 @@ export const Dashboard = () => {
   }
 
   useEffect(() => {
-    setRawData(getStaticDashboardData(blobUrl))
-  }, [blobUrl])
-
-  useEffect(() => {
     let isCancelled = false
 
     const syncData = async () => {
@@ -41,7 +41,7 @@ export const Dashboard = () => {
           body: JSON.stringify({ blobUrl }),
         })
 
-        if (!response.ok) return
+        if (!response.ok) throw new Error('Failed to load dashboard data')
 
         const nextData = (await response.json()) as RawDashboardData
 
@@ -49,7 +49,15 @@ export const Dashboard = () => {
           setRawData(nextData)
         }
       } catch {
-        // keep static fallback
+        // On failure, fall back to the UI base (navigation cards + empty
+        // content) so the homepage still renders instead of staying blank.
+        if (!isCancelled) {
+          setRawData(getStaticDashboardData(blobUrl))
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoading(false)
+        }
       }
     }
 
@@ -63,13 +71,13 @@ export const Dashboard = () => {
   // Collapse the raw bilingual data to the active locale. Toggling is instant
   // (no refetch) because both languages are already in memory.
   const dashboardData = useMemo(
-    () => localizeDashboardData(rawData, locale),
+    () => (rawData ? localizeDashboardData(rawData, locale) : null),
     [rawData, locale],
   )
 
-  const { cards, profile, projects, categories, skills, contacts } = dashboardData
+  const projects = dashboardData?.projects
   useEffect(() => {
-    if (projects.length === 0) {
+    if (!projects || projects.length === 0) {
       setSelectedProjectId(null)
       return
     }
@@ -93,6 +101,20 @@ export const Dashboard = () => {
       ? `${baseContainer} h-auto`
       : `${baseContainer} h-auto lg:h-[585px] overflow-y-auto lg:overflow-visible`
 
+  // Show the loading state until the first fetch resolves.
+  if (isLoading || !dashboardData) {
+    return (
+      <div className="w-full max-w-[1200px] flex flex-col gap-3">
+        <div className="flex justify-end">
+          <LanguageToggle locale={locale} onChange={handleLocaleChange} />
+        </div>
+        <DashboardLoading locale={locale} />
+      </div>
+    )
+  }
+
+  const { cards, profile, categories, skills, contacts } = dashboardData
+
   return (
     <div className="w-full max-w-[1200px] flex flex-col gap-3">
       <div className="flex justify-end">
@@ -103,7 +125,7 @@ export const Dashboard = () => {
           <BioView profile={profile} locale={locale} onBack={() => setView('cards')} />
         ) : view === 'projects' ? (
           <ProjectsView
-            projects={projects}
+            projects={dashboardData.projects}
             categories={categories}
             locale={locale}
             selectedProjectId={selectedProjectId}

@@ -148,26 +148,11 @@ create table if not exists project_responsibilities (
 );
 
 -- ---------------------------------------------------------------------------
--- dashboard_cards, skill_items, contacts
+-- skill_items, contacts
 -- ---------------------------------------------------------------------------
-create table if not exists dashboard_cards (
-  id            uuid primary key default gen_random_uuid(),
-  title         jsonb,  -- { en, id }
-  subtitle      jsonb,  -- { en, id }
-  description   jsonb,  -- { en, id }
-  cta_label     jsonb,  -- { en, id }
-  href          text,
-  image_id      uuid references assets(id) on delete set null,
-  theme_key     text,
-  gradient_from text,
-  gradient_via  text,
-  gradient_to   text,
-  is_active     boolean not null default true,
-  sort_order    integer not null default 0,
-  created_at    timestamptz not null default now(),
-  updated_at    timestamptz not null default now()
-);
-
+-- Note: the homepage navigation cards live in the UI (features/dashboard/data/
+-- cards.data.ts), not the database. The former `dashboard_cards` table is no
+-- longer used and can be dropped (see neon/SEEDING.md / DROP TABLE dashboard_cards).
 create table if not exists skill_items (
   id          uuid primary key default gen_random_uuid(),
   name        jsonb,  -- { en, id }
