@@ -57,6 +57,7 @@ export interface UIStrings {
   languageName: string
   switchTo: string
   loading: string
+  loadingHint: string
   backToMenu: string
   backToList: string
   // Bio
@@ -101,7 +102,8 @@ export const UI: Record<Locale, UIStrings> = {
   en: {
     languageName: 'English',
     switchTo: 'Bahasa Indonesia',
-    loading: 'Loading…',
+    loading: 'Preparing the portfolio',
+    loadingHint: 'Just a moment…',
     backToMenu: 'Back to menu',
     backToList: '← Back to List',
     portfolioBio: 'Portfolio Bio',
@@ -140,7 +142,8 @@ export const UI: Record<Locale, UIStrings> = {
   id: {
     languageName: 'Bahasa Indonesia',
     switchTo: 'English',
-    loading: 'Memuat…',
+    loading: 'Menyiapkan portofolio',
+    loadingHint: 'Mohon tunggu sebentar…',
     backToMenu: 'Kembali ke menu',
     backToList: '← Kembali ke Daftar',
     portfolioBio: 'Bio Portfolio',
