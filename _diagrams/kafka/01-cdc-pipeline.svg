@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" font-family="'Segoe UI', system-ui, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+    </marker>
+    <marker id="arrI" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#6366f1"/>
+    </marker>
+    <marker id="arrR" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#f43f5e"/>
+    </marker>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a0e1a"/>
+      <stop offset="1" stop-color="#0d1326"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bg)"/>
+
+  <text x="60" y="66" fill="#f1f5f9" font-size="34" font-weight="700">End-to-end CDC pipeline</text>
+  <text x="60" y="98" fill="#94a3b8" font-size="18">Odoo change → shadow table → Kafka → consumer → destination database</text>
+
+  <!-- feedback loop (above) -->
+  <path d="M 967 250 C 967 168, 337 168, 337 250" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arrI)"/>
+  <text x="652" y="158" fill="#a5b4fc" font-size="15" text-anchor="middle">✓ mark is_consumed / is_resync / error_msg</text>
+
+  <!-- pipeline nodes (top y = 250, h = 95) -->
+  <!-- node 1 -->
+  <g>
+    <rect x="40" y="250" width="175" height="95" rx="12" fill="#141a2e" stroke="#2a3350" stroke-width="1.5"/>
+    <text x="127" y="296" fill="#e2e8f0" font-size="18" font-weight="600" text-anchor="middle">Odoo ERP DB</text>
+    <text x="127" y="320" fill="#94a3b8" font-size="13" text-anchor="middle">source Postgres</text>
+  </g>
+  <!-- node 2 -->
+  <g>
+    <rect x="250" y="250" width="175" height="95" rx="12" fill="#141a2e" stroke="#22d3ee" stroke-width="1.5"/>
+    <text x="337" y="290" fill="#e2e8f0" font-size="18" font-weight="600" text-anchor="middle">Shadow table</text>
+    <text x="337" y="313" fill="#94a3b8" font-size="13" text-anchor="middle">trigger logs only</text>
+    <text x="337" y="330" fill="#94a3b8" font-size="13" text-anchor="middle">changed columns</text>
+  </g>
+  <!-- node 3 -->
+  <g>
+    <rect x="460" y="250" width="175" height="95" rx="12" fill="#141a2e" stroke="#2a3350" stroke-width="1.5"/>
+    <text x="547" y="290" fill="#e2e8f0" font-size="18" font-weight="600" text-anchor="middle">Kafka Connect</text>
+    <text x="547" y="313" fill="#94a3b8" font-size="13" text-anchor="middle">Debezium CDC</text>
+    <text x="547" y="330" fill="#94a3b8" font-size="13" text-anchor="middle">capture changes</text>
+  </g>
+  <!-- node 4 -->
+  <g>
+    <rect x="670" y="250" width="175" height="95" rx="12" fill="#141a2e" stroke="#2a3350" stroke-width="1.5"/>
+    <text x="757" y="290" fill="#e2e8f0" font-size="18" font-weight="600" text-anchor="middle">Kafka topic</text>
+    <text x="757" y="313" fill="#94a3b8" font-size="13" text-anchor="middle">per source table</text>
+    <text x="757" y="330" fill="#94a3b8" font-size="13" text-anchor="middle">op = c / u / d</text>
+  </g>
+  <!-- node 5 -->
+  <g>
+    <rect x="880" y="250" width="175" height="95" rx="12" fill="#141a2e" stroke="#22d3ee" stroke-width="1.5"/>
+    <text x="967" y="287" fill="#e2e8f0" font-size="18" font-weight="600" text-anchor="middle">Python consumer</text>
+    <text x="967" y="309" fill="#94a3b8" font-size="13" text-anchor="middle">parse · resolve FK</text>
+    <text x="967" y="326" fill="#94a3b8" font-size="13" text-anchor="middle">map · localize · upsert</text>
+  </g>
+  <!-- node 6 -->
+  <g>
+    <rect x="1090" y="250" width="150" height="95" rx="12" fill="#141a2e" stroke="#2a3350" stroke-width="1.5"/>
+    <text x="1165" y="290" fill="#e2e8f0" font-size="18" font-weight="600" text-anchor="middle">Destination DB</text>
+    <text x="1165" y="313" fill="#94a3b8" font-size="13" text-anchor="middle">CRM · Portal</text>
+    <text x="1165" y="330" fill="#94a3b8" font-size="13" text-anchor="middle">WMS · …</text>
+  </g>
+
+  <!-- pipeline arrows -->
+  <line x1="216" y1="297" x2="248" y2="297" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="426" y1="297" x2="458" y2="297" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="636" y1="297" x2="668" y2="297" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="846" y1="297" x2="878" y2="297" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="1056" y1="297" x2="1088" y2="297" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+
+  <text x="232" y="240" fill="#64748b" font-size="12" text-anchor="middle">on change</text>
+
+  <!-- error branch (below) -->
+  <line x1="967" y1="345" x2="967" y2="430" stroke="#f43f5e" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arrR)"/>
+  <text x="985" y="392" fill="#fb7185" font-size="14">on failure</text>
+  <g>
+    <rect x="845" y="430" width="244" height="78" rx="12" fill="#1a1320" stroke="#7f1d2e" stroke-width="1.5"/>
+    <text x="967" y="466" fill="#fecdd3" font-size="17" font-weight="600" text-anchor="middle">WhatsApp alert queue</text>
+    <text x="967" y="490" fill="#94a3b8" font-size="13" text-anchor="middle">flag record · notify monitoring group</text>
+  </g>
+
+  <text x="60" y="690" fill="#475569" font-size="14">Idempotent per record: re-running a message updates in place — shadow flags prevent duplicates.</text>
+</svg>
