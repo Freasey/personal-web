@@ -3,7 +3,7 @@ import 'server-only'
 import { getSql, hasDb, tryGetSql } from '@/lib/db'
 
 // ---------------------------------------------------------------------------
-// User-agent parsing — lightweight, dependency-free. Good enough to label a
+// User-agent parsing: lightweight, dependency-free. Good enough to label a
 // visit as Mobile/Tablet/Desktop/Bot and name the browser + OS. Not meant to
 // be exhaustive; falls back to "Unknown".
 // ---------------------------------------------------------------------------

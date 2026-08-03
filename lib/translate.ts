@@ -64,7 +64,7 @@ const commonRules = [
 
 const enToIdRules = [
   '',
-  'Style for Indonesian (write the way a working Indonesian software engineer actually writes — a natural mix of Indonesian with common English tech terms):',
+  'Style for Indonesian (write the way a working Indonesian software engineer actually writes, a natural mix of Indonesian with common English tech terms):',
   '- Keep these common industry terms in ENGLISH; do NOT translate them into formal Indonesian:',
   `  ${KEEP_IN_ENGLISH.join(', ')}.`,
   '- Job titles and roles stay in English (e.g. "Fullstack Engineer" stays "Fullstack Engineer", NOT "Insinyur").',

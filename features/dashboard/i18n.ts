@@ -77,7 +77,7 @@ export interface UIStrings {
   techStack: string
   role: string
   year: string
-  // Projects — categories & search
+  // Projects: categories & search
   projectTypes: string
   chooseType: string
   searchPlaceholder: string

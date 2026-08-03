@@ -37,7 +37,7 @@ export interface DashboardData {
 /**
  * An empty profile used as the base shape before DB content arrives. Content
  * (profile/projects/skills/contacts/categories) is no longer seeded with dummy
- * data — it must come from the database.
+ * data; it must come from the database.
  */
 const emptyProfile: RawProfileData = {
   name: '',

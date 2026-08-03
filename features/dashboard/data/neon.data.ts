@@ -57,7 +57,7 @@ const readLocalized = (row: Row, ...keys: string[]): LocalizedText | undefined =
             if (result) return result
           }
         } catch {
-          // not JSON after all — fall through to plain string
+          // not JSON after all, fall through to plain string
         }
       }
       return { en: trimmed }
@@ -203,7 +203,7 @@ const mapProject = (row: Row, fallback?: RawProjectItem): RawProjectItem => ({
 
 // Note: the `json_build_object(...)` expressions below are static SQL (no user
 // input) that mirror PostgREST's embedded asset object (`{public_url, kind}`),
-// so they live inline in the template literal — only real values use `${}`.
+// so they live inline in the template literal; only real values use `${}`.
 
 // Load a single project for the dashboard edit form, regardless of is_active
 // (the shared loadDashboardData below filters to active-only for the public

@@ -74,7 +74,7 @@ export default async function CategoriesListPage() {
 
           {uncategorized > 0 && (
             <p className="mt-1 text-xs text-white/40">
-              {uncategorized} project belum punya jenis — di situs publik akan muncul di grup
+              {uncategorized} project belum punya jenis, di situs publik akan muncul di grup
               &quot;Lainnya&quot;. Atur jenisnya lewat edit project.
             </p>
           )}

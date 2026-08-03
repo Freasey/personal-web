@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   try {
     body = await request.json()
   } catch {
-    // empty/invalid body is fine — fall back to header-derived values
+    // empty/invalid body is fine, fall back to header-derived values
   }
 
   const headers = request.headers

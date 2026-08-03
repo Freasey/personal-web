@@ -411,7 +411,7 @@ export const ProjectForm = ({ mode, projectId, initialValue, categories }: Proje
               onChange={(e) => setValue((prev) => ({ ...prev, categoryId: e.target.value }))}
             >
               <option value="" className="bg-slate-900">
-                — Tanpa jenis —
+                - Tanpa jenis -
               </option>
               {categories.map((category) => (
                 <option key={category.id} value={category.id} className="bg-slate-900">

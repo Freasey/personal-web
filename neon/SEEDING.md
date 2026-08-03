@@ -1,4 +1,4 @@
-# Portfolio seeding — agent guide
+# Portfolio seeding: agent guide
 
 This folder holds the bridge that turns a project into a portfolio entry in the
 live **Neon** database that powers this site. When the user says *"make a
@@ -12,9 +12,9 @@ portfolio for project X"*, the workflow is:
 
 ## Files
 
-- `seed-projects.mjs` — the seeder. Reads a JSON file and upserts projects.
-- `seed-categories.sql` — seeds the 5 master categories (run once; idempotent).
-- `schema.sql` — full Neon schema (source of truth; recreate the DB from this).
+- `seed-projects.mjs`: the seeder. Reads a JSON file and upserts projects.
+- `seed-categories.sql`: seeds the 5 master categories (run once; idempotent).
+- `schema.sql`: full Neon schema (source of truth; recreate the DB from this).
 
 ## How to run
 
@@ -75,7 +75,7 @@ Field → table mapping (matches the portfolio questions):
 
 - **Upsert key is `slug`.** If `slug` is omitted it is derived from `name`
   (e.g. "Porto Sales API" → `porto-sales-api`). Re-running the same JSON updates
-  in place (delete-by-slug then insert; children cascade) — no duplicates.
+  in place (delete-by-slug then insert; children cascade), so no duplicates.
 - A project edited in the dashboard may have its `slug` cleared (the form has no
   slug field). Re-seeding such a project by slug will **not** match it and will
   create a duplicate. Treat dashboard-curated projects as owned by the dashboard

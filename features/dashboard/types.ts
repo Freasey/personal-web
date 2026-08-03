@@ -92,7 +92,7 @@ export interface SkillItem {
 }
 
 // ---------------------------------------------------------------------------
-// Raw (bilingual) shapes — what data files and the DB produce before a locale
+// Raw (bilingual) shapes: what data files and the DB produce before a locale
 // is chosen. Translatable fields are LocalizedText ({ en, id }); identifiers,
 // URLs, tech names, and dates stay plain strings. See ./localize to collapse
 // these to the string-based view types above for an active locale.

@@ -21,7 +21,7 @@ const numberFmt = new Intl.NumberFormat('id-ID')
 
 const formatTime = (iso: string): string => {
   const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) return '—'
+  if (Number.isNaN(date.getTime())) return '-'
   return new Intl.DateTimeFormat('id-ID', {
     day: '2-digit',
     month: 'short',
@@ -32,7 +32,7 @@ const formatTime = (iso: string): string => {
 
 const formatLocation = (visit: VisitRow): string => {
   const parts = [visit.city, visit.country].filter(Boolean)
-  return parts.length ? parts.join(', ') : '—'
+  return parts.length ? parts.join(', ') : '-'
 }
 
 const deviceBadgeClass = (device: string | null): string => {
@@ -107,7 +107,7 @@ export default async function DashboardPage() {
             Siapa saja yang mengakses situsmu.
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-white/60">
-            Pantau IP, perangkat, dan lokasi setiap pengunjung secara real-time —
+            Pantau IP, perangkat, dan lokasi setiap pengunjung secara real-time,
             langsung dari kunjungan yang tercatat di database.
           </p>
         </section>
@@ -191,7 +191,7 @@ export default async function DashboardPage() {
                         <td className="px-2 py-3">
                           <div className="flex items-center gap-2">
                             <span className="font-mono text-xs text-white/80">
-                              {visit.ip_address ?? '—'}
+                              {visit.ip_address ?? '-'}
                             </span>
                             {visit.is_new && (
                               <span className="rounded-full bg-cyan-500/15 px-1.5 py-0.5 text-[10px] font-medium text-cyan-300">
@@ -208,13 +208,13 @@ export default async function DashboardPage() {
                               {visit.device ?? 'Unknown'}
                             </span>
                             <span className="text-xs text-white/50">
-                              {[visit.browser, visit.os].filter(Boolean).join(' · ') || '—'}
+                              {[visit.browser, visit.os].filter(Boolean).join(' · ') || '-'}
                             </span>
                           </div>
                         </td>
                         <td className="px-2 py-3 text-white/70">{formatLocation(visit)}</td>
                         <td className="px-2 py-3 font-mono text-xs text-white/60">
-                          {visit.path ?? '—'}
+                          {visit.path ?? '-'}
                         </td>
                         <td className="px-2 py-3 whitespace-nowrap text-white/60">
                           {formatTime(visit.created_at)}

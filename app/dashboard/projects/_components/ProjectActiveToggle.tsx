@@ -43,7 +43,7 @@ export const ProjectActiveToggle = ({ id, initialActive }: Props) => {
       onClick={toggle}
       disabled={isLoading}
       aria-pressed={active}
-      title={error ? 'Failed to update — try again' : active ? 'Visible on the public site' : 'Hidden from the public site'}
+      title={error ? 'Failed to update, try again' : active ? 'Visible on the public site' : 'Hidden from the public site'}
       className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur-md transition disabled:opacity-50 ${
         active
           ? 'border-emerald-400/40 bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30'
